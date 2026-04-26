@@ -69,7 +69,7 @@ export default function ChatWindow() {
 
   return (
     <div className="h-screen p-4 ">
-      <div className="flex flex-col gap-4 h-full bg-stone-200  p-4 rounded-lg shadow-lg ">
+      <div className="flex flex-col gap-4 h-full bg-stone-300  p-4 rounded-lg shadow-lg ">
         <div className="flex-1 overflow-y-auto p-4 space-y-3 rounded-lg scrollbar-thin scrollbar-thumb-stone-800 scrollbar-track-stone-500">
           {messages.map((msg) =>
             msg.type === "chart" ? (
