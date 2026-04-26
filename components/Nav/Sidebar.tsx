@@ -34,12 +34,12 @@ export default function Sidebar({
       href: "/stats",
       icon: ChartColumnDecreasing,
     },
-    {
-      id: "settings",
-      label: "Settings",
-      href: "/settings",
-      icon: Settings,
-    },
+    // {
+    //   id: "settings",
+    //   label: "Settings",
+    //   href: "/settings",
+    //   icon: Settings,
+    // },
   ];
   useEffect(() => {
     if (!navItems.length) return;
@@ -61,7 +61,7 @@ export default function Sidebar({
       />
 
       <aside
-        className={`h-screen flex flex-col justify-around sm:justify-between bg-zinc-800 border-r-2 border-r-gray-600  px-4 py-6  z-50  max-md:fixed max-md:inset-0 transform transition-transform duration-300 ease-in-out ${
+        className={`h-screen flex flex-col justify-around sm:justify-between bg-stone-800 border-r-2 border-r-gray-600  px-4 py-6  z-50  max-md:fixed max-md:inset-0 transform transition-transform duration-300 ease-in-out ${
           open ? "w-58 max-md:translate-x-0" : "w-16 max-md:-translate-x-full"
         }`}
       >
@@ -80,7 +80,7 @@ export default function Sidebar({
             <button
               onClick={() => setOpen(!open)}
               aria-label="Close listings menu"
-              className="p-1 rounded-sm  hover:bg-zinc-700 cursor-pointer text-gray-300 transition-colors duration-200"
+              className="p-1 rounded-sm  hover:bg-stone-700 cursor-pointer text-gray-300 transition-colors duration-200"
             >
               {open ? (
                 <PanelLeftClose size={22} />
@@ -101,7 +101,9 @@ export default function Sidebar({
                 item={item}
                 isActive={active === item.label}
                 className={
-                  open ? " px-4 py-3 rounded-lg" : "p-1 mb-2 rounded-md"
+                  open
+                    ? " px-4 py-3 rounded-lg "
+                    : "p-1 mb-2 rounded-md justify-center"
                 }
               >
                 <item.icon size={20} />

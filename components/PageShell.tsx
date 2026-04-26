@@ -16,7 +16,7 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 
       <div className="flex flex-col flex-1 overflow-auto">
-        <main className="flex-1  bg-zinc-800 ">{children}</main>
+        <main className="flex-1  bg-stone-800 ">{children}</main>
       </div>
     </div>
   );
