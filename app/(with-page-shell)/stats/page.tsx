@@ -1,5 +1,3 @@
-import Chat from "@/components/ChatWindow";
-
 export default function Stats() {
-  return <Chat />;
+  return <div className="min-h-screen p-4 ">Stats</div>;
 }

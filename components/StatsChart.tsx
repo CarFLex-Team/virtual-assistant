@@ -34,7 +34,7 @@ export default function StatsChart({ data }: StatsChartProps) {
           <Line
             type="monotone"
             dataKey="value"
-            stroke="#3b82f6"
+            stroke="#024a70"
             strokeWidth={3}
           />
         </LineChart>

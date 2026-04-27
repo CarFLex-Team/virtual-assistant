@@ -4,19 +4,18 @@
 @import "tailwindcss/utilities.css";
 
 @theme {
-  --color-primary-600: #8b5833;
-  --color-primary-500: #e78b48;
+  /* --color-primary-600: #000550; blue */
+  --color-primary-600: #052f4a;
+  /* --color-primary-600: #ff8904; */
   --color-primary-400: #d09870;
-  --color-secondary-800: #122943;
-  --color-secondary-400: #6dc6e7;
-  --color-background: #f7f9fb;
+  --color-background: #24252d;
 }
 /* globals.css */
 .scrollbar-thin::-webkit-scrollbar {
   width: 6px;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: #292524;
+  background-color: #242429;
   /* background-color: #27272a; */
   border-radius: 9999px;
 }

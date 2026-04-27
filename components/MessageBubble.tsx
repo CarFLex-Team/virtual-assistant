@@ -2,7 +2,15 @@ interface MessageProps {
   message: {
     id: number;
     content: string;
-    type: "user" | "bot" | "chart";
+    type:
+      | "user"
+      | "bot"
+      | "chart"
+      | "table"
+      | "ranking"
+      | "distribution"
+      | "clarification"
+      | "error";
   };
 }
 
@@ -11,10 +19,10 @@ export default function MessageBubble({ message }: MessageProps) {
   return (
     <div
       className={`max-w-2xl px-4 py-2 rounded-xl wrap-break-word
-        ${isUser ? "bg-stone-600 text-white  rounded-br-none" : "bg-gray-300 text-gray-800  rounded-bl-none"}
+        ${isUser ? "bg-sky-900 text-white  rounded-br-none" : "bg-white text-gray-800  rounded-bl-none"}
         shadow-md`}
     >
-      {message.content}
+      {message.content || "No content"}
     </div>
   );
 }

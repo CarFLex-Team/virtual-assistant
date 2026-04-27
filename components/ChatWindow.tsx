@@ -4,85 +4,180 @@ import Message from "./MessageBubble";
 import StatsChart from "./StatsChart";
 import { ArrowUp } from "lucide-react";
 // import { fetchStats } from "@/utils/api";
-
-interface ChatProps {}
-
-interface ChatMessage {
-  id: number;
-  content: string;
-  type: "user" | "bot" | "chart";
-}
-
-let messageId = 0;
-
+import { ChatMessage, MessageType } from "./type";
+import TableView from "./TableView";
+import RankingView from "./RankingView";
+import DistributionView from "./DistributionView";
+import Clarification from "./Clarification";
+import ErrorBubble from "./ErrorBubble";
+import { loadThreads, saveThreads } from "@/utils/storage";
+import { fetchAIResponse } from "@/utils/api";
+import { useSearchParams } from "next/navigation";
 export default function ChatWindow() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const searchParams = useSearchParams();
+  const threadIdFromUrl = searchParams.get("threadId");
+  const [threads, setThreads] = useState<any[]>([]);
+  const [activeThread, setActiveThread] = useState<string | null>(
+    threadIdFromUrl,
+  );
+  // const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    if (threadIdFromUrl && threadIdFromUrl !== activeThread) {
+      setActiveThread(threadIdFromUrl);
+    }
+  }, [threadIdFromUrl]);
+
+  useEffect(() => {
+    const saved = loadThreads();
+    setThreads(saved);
+    if (!activeThread && saved.length > 0) setActiveThread(saved[0].id);
+  }, []);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-  const handleSend = async () => {
-    if (!input.trim()) return;
+  }, [threads, activeThread]);
+
+  const sendMessage = async (content: string) => {
+    if (!activeThread) return;
+
     const userMessage: ChatMessage = {
-      id: messageId++,
-      content: input,
+      id: Date.now(),
       type: "user",
+      content,
+      timestamp: new Date().toISOString(),
     };
-    setMessages([...messages, userMessage]);
-    setInput("");
 
-    // Simulate bot response
-    const botMessage: ChatMessage = {
-      id: messageId++,
-      content: "Processing your request...",
+    let updatedThreads = threads.map((t) =>
+      t.id === activeThread
+        ? { ...t, messages: [...t.messages, userMessage] }
+        : t,
+    );
+    setThreads(updatedThreads);
+    saveThreads(updatedThreads);
+
+    const botTyping: ChatMessage = {
+      id: Date.now() + 1,
       type: "bot",
+      content: "Typing...",
+      timestamp: new Date().toISOString(),
     };
-    setMessages((prev) => [...prev, botMessage]);
+    updatedThreads = updatedThreads.map((t) =>
+      t.id === activeThread
+        ? { ...t, messages: [...t.messages, botTyping] }
+        : t,
+    );
+    setThreads(updatedThreads);
+    saveThreads(updatedThreads);
 
-    // Fetch stats from backend
-    // const stats = await fetchStats();
-    setMessages((prev) => [
-      ...prev.filter((m) => m.id !== botMessage.id),
-      // {
-      //   id: messageId++,
-      //   content: JSON.stringify({
-      //     labels: ["Jan", "Feb", "Mar", "Apr", "May"],
-      //     datasets: [
-      //       {
-      //         label: "Sales",
-      //         data: [12, 19, 3, 5, 2],
-      //         backgroundColor: "rgba(75, 192, 192, 0.6)",
-      //       },
-      //     ],
-      //   }),
-      //   type: "chart",
-      // },
-      {
-        id: messageId++,
-        content:
-          "This is a placeholder for the chart data. Replace with actual API response.",
-        type: "bot",
-      },
-    ]);
+    try {
+      const aiData = await fetchAIResponse(content);
+
+      updatedThreads = updatedThreads.map((t) =>
+        t.id === activeThread
+          ? {
+              ...t,
+              messages: [
+                ...t.messages.filter((m: any) => m.id !== botTyping.id),
+                {
+                  id: Date.now() + 2,
+                  type: aiData.type,
+                  content: aiData.data,
+                  timestamp: new Date().toISOString(),
+                },
+              ],
+            }
+          : t,
+      );
+      setThreads(updatedThreads);
+      saveThreads(updatedThreads);
+    } catch (err: any) {
+      updatedThreads = updatedThreads.map((t) =>
+        t.id === activeThread
+          ? {
+              ...t,
+              messages: [
+                ...t.messages.filter((m: any) => m.id !== botTyping.id),
+                {
+                  id: Date.now() + 2,
+                  type: "error",
+                  content: { message: err.message },
+                  timestamp: new Date().toISOString(),
+                },
+              ],
+            }
+          : t,
+      );
+      setThreads(updatedThreads);
+      saveThreads(updatedThreads);
+    }
   };
-
+  const handleSend = () => {
+    if (!input.trim()) return;
+    sendMessage(input);
+    setInput("");
+  };
+  function renderMessage(msg: ChatMessage) {
+    switch (msg.type) {
+      case "user":
+      case "bot":
+        return <Message message={msg} />;
+      case "chart":
+        return <StatsChart data={msg.content} />;
+      case "table":
+        return <TableView data={msg.content} />;
+      case "ranking":
+        return <RankingView data={msg.content} />;
+      case "distribution":
+        return <DistributionView data={msg.content} />;
+      case "clarification":
+        return <Clarification data={msg.content} onSelect={() => {}} />;
+      case "error":
+        return <ErrorBubble content={msg.content} />;
+      default:
+        return <Message message={{ ...msg, type: "bot" }} />;
+    }
+  }
   return (
     <div className="h-screen p-4 ">
-      <div className="flex flex-col gap-4 h-full bg-stone-300  p-4 rounded-lg shadow-lg ">
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 rounded-lg scrollbar-thin scrollbar-thumb-stone-800 scrollbar-track-stone-500">
-          {messages.map((msg) =>
-            msg.type === "chart" ? (
-              <StatsChart key={msg.id} data={JSON.parse(msg.content)} />
-            ) : (
-              <div
-                key={msg.id}
-                className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <Message key={msg.id} message={msg} />
-              </div>
-            ),
-          )}
+      <div className="flex flex-col gap-4 h-full bg-[url('/bg-chat.jpg')] bg-cover bg-center  p-4 rounded-lg shadow-lg ">
+        {threads.length === 0 && (
+          <div className="h-full flex flex-col items-center justify-center gap-6 ">
+            <div className="p-6 rounded-2xl bg-linear-to-b from-white to-sky-100 px-4s shadow-lg flex flex-col items-center gap-4 max-w-xs">
+              <img
+                src="/chat-bot2.png"
+                alt="Chat Bot"
+                className="w-32 h-32 object-contain"
+              />
+              <p className="text-center text-gray-700 text-lg font-semibold">
+                Hi, I'm <span className="text-primary-600">ELIARA</span>, your
+                AI assistant.
+              </p>
+              <p className="text-center text-gray-500 text-sm">
+                Ask me anything about your data and I'll provide insights
+                instantly.
+              </p>
+            </div>
+
+            {/* Optional tip */}
+            <p className="text-gray-600 text-sm italic">
+              Tip: Try typing a question like "Show me sales for last week"
+            </p>
+          </div>
+        )}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 rounded-lg scrollbar-thin scrollbar-thumb-sky-800 scrollbar-track-sky-500">
+          {activeThread &&
+            threads
+              .find((t) => t.id === activeThread)
+              ?.messages.map((msg: ChatMessage) => (
+                <div
+                  key={msg.id}
+                  className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  {renderMessage(msg)}
+                </div>
+              ))}
           <div ref={messagesEndRef} />
         </div>
 
@@ -90,14 +185,14 @@ export default function ChatWindow() {
         <div className="flex gap-2 ">
           <input
             type="text"
-            className="flex-1 border border-stone-500 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-stone-700"
+            className="flex-1 border border-sky-900 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-950"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             placeholder="Type a message..."
           />
           <button
-            className="bg-stone-600 hover:bg-stone-500 text-white font-semibold p-2 rounded-xl transition-colors duration-200 cursor-pointer"
+            className="bg-sky-900 hover:bg-sky-800 text-white font-semibold p-2 rounded-xl transition-colors duration-200 cursor-pointer"
             onClick={handleSend}
           >
             <ArrowUp />
