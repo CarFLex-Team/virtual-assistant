@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { use, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   PanelLeftClose,
   PanelLeftOpen,
@@ -13,28 +13,41 @@ import { saveThreads, loadThreads } from "@/utils/storage";
 export default function Sidebar({
   open,
   setOpen,
-  activeThread,
-  setActiveThread,
+  // activeThread,
+  // setActiveThread,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
-  activeThread: string | null;
-  setActiveThread: (id: string) => void;
+  // activeThread: string | null;
+  // setActiveThread: (id: string) => void;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const threadIdFromUrl = searchParams.get("threadId");
   const [threads, setThreads] = useState<any[]>([]);
   const [activeNav, setActiveNav] = useState<string | null>(null);
+  const [activeThread, setActiveThread] = useState<string | null>(
+    threadIdFromUrl,
+  );
 
-  // Load threads from localStorage
   useEffect(() => {
     const saved = loadThreads();
     setThreads(saved);
-    if (!activeThread && saved.length > 0) setActiveThread(saved[0].id);
+  }, [activeThread]);
+  useEffect(() => {
+    if (threadIdFromUrl && threadIdFromUrl !== activeThread) {
+      setActiveThread(threadIdFromUrl);
+    }
+  }, []);
+  useEffect(() => {
+    const current = navItems.find((i) => i.href === window.location.pathname);
+    setActiveNav(current?.label || null);
   }, []);
 
-  // Auto-save threads
-  // useEffect(() => saveThreads(threads), [threads]);
-
+  const setActiveThreadAndUrl = (id: string) => {
+    setActiveThread(id);
+    router.push(`/?threadId=${id}`);
+  };
   const startNewChat = () => {
     const newThread = {
       id: crypto.randomUUID(),
@@ -62,17 +75,6 @@ export default function Sidebar({
       icon: ChartColumnDecreasing,
     },
   ];
-
-  useEffect(() => {
-    const current = navItems.find((i) => i.href === window.location.pathname);
-    setActiveNav(current?.label || null);
-  }, []);
-
-  const setActiveThreadAndUrl = (id: string) => {
-    setActiveThread(id);
-    router.push(`/?threadId=${id}`);
-  };
-
   return (
     <aside
       className={`h-screen flex flex-col bg-background border-r-2 border-r-sky-950 px-4 py-6 transform transition-transform ${open ? "w-58 max-md:translate-x-0" : "w-16 max-md:-translate-x-full"}`}
@@ -116,24 +118,28 @@ export default function Sidebar({
           ))}
 
           {/* Threads */}
-          <div className="mt-6">
-            <p className={`text-gray-400 ${open ? "px-4 py-1" : ""}`}>Chats</p>
-            {threads.map((t) => (
-              <div
-                key={t.id}
-                onClick={() => setActiveThreadAndUrl(t.id)}
-                className={`cursor-pointer p-2 rounded ${t.id === activeThread ? "bg-blue-100" : "hover:bg-gray-100"}`}
+          {open && (
+            <div className="mt-6">
+              <p className={`text-gray-400 ${open ? "px-4 py-1" : ""}`}>
+                Recent Chats
+              </p>
+              {threads.map((t) => (
+                <div
+                  key={t.id}
+                  onClick={() => setActiveThreadAndUrl(t.id)}
+                  className={`cursor-pointer p-2 my-1 rounded ${t.id === activeThread ? "bg-blue-100" : "text-white hover:bg-gray-100 hover:text-gray-900"} `}
+                >
+                  {t.messages[0]?.content || t.title || "New Chat"}
+                </div>
+              ))}
+              <button
+                className="bg-sky-900 text-white p-2 my-2 rounded w-full hover:bg-sky-800 transition-colors duration-200 cursor-pointer"
+                onClick={startNewChat}
               >
-                {t.title || t.messages[0]?.content || "New Chat"}
-              </div>
-            ))}
-            <button
-              className="bg-blue-500 text-white p-2 m-2 rounded w-full"
-              onClick={startNewChat}
-            >
-              + New Chat
-            </button>
-          </div>
+                + New Chat
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </aside>

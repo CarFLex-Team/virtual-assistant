@@ -32,15 +32,26 @@ export default function ChatWindow() {
   useEffect(() => {
     const saved = loadThreads();
     setThreads(saved);
-    if (!activeThread && saved.length > 0) setActiveThread(saved[0].id);
-  }, []);
+    if (threadIdFromUrl && threadIdFromUrl !== activeThread) {
+      setActiveThread(threadIdFromUrl);
+    }
+    // if (!activeThread && saved.length > 0) setActiveThread(saved[0].id);
+  }, [threadIdFromUrl]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [threads, activeThread]);
 
   const sendMessage = async (content: string) => {
-    if (!activeThread) return;
+    if (!activeThread) {
+      const newThread = {
+        id: Date.now().toString(),
+        messages: [],
+      };
+      setThreads([newThread, ...threads]);
+      setActiveThread(newThread.id);
+      saveThreads([newThread, ...threads]);
+    }
 
     const userMessage: ChatMessage = {
       id: Date.now(),
@@ -142,30 +153,31 @@ export default function ChatWindow() {
   return (
     <div className="h-screen p-4 ">
       <div className="flex flex-col gap-4 h-full bg-[url('/bg-chat.jpg')] bg-cover bg-center  p-4 rounded-lg shadow-lg ">
-        {threads.length === 0 && (
-          <div className="h-full flex flex-col items-center justify-center gap-6 ">
-            <div className="p-6 rounded-2xl bg-linear-to-b from-white to-sky-100 px-4s shadow-lg flex flex-col items-center gap-4 max-w-xs">
-              <img
-                src="/chat-bot2.png"
-                alt="Chat Bot"
-                className="w-32 h-32 object-contain"
-              />
-              <p className="text-center text-gray-700 text-lg font-semibold">
-                Hi, I'm <span className="text-primary-600">ELIARA</span>, your
-                AI assistant.
-              </p>
-              <p className="text-center text-gray-500 text-sm">
-                Ask me anything about your data and I'll provide insights
-                instantly.
+        {activeThread &&
+          threads.find((t) => t.id === activeThread)?.messages.length === 0 && (
+            <div className="h-full flex flex-col items-center justify-center gap-6 ">
+              <div className="p-6 rounded-2xl bg-linear-to-b from-white to-sky-100 px-4s shadow-lg flex flex-col items-center gap-4 max-w-xs">
+                <img
+                  src="/chat-bot2.png"
+                  alt="Chat Bot"
+                  className="w-32 h-32 object-contain"
+                />
+                <p className="text-center text-gray-700 text-lg font-semibold">
+                  Hi, I'm <span className="text-primary-600">ELIARA</span>, your
+                  AI assistant.
+                </p>
+                <p className="text-center text-gray-500 text-sm">
+                  Ask me anything about your data and I'll provide insights
+                  instantly.
+                </p>
+              </div>
+
+              {/* Optional tip */}
+              <p className="text-gray-600 text-sm italic">
+                Tip: Try typing a question like "Show me sales for last week"
               </p>
             </div>
-
-            {/* Optional tip */}
-            <p className="text-gray-600 text-sm italic">
-              Tip: Try typing a question like "Show me sales for last week"
-            </p>
-          </div>
-        )}
+          )}
         <div className="flex-1 overflow-y-auto p-4 space-y-3 rounded-lg scrollbar-thin scrollbar-thumb-sky-800 scrollbar-track-sky-500">
           {activeThread &&
             threads
