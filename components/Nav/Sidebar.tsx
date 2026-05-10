@@ -68,7 +68,7 @@ export default function Sidebar({
       const newThread = {
         id: crypto.randomUUID(),
         title: "New Chat",
-        messages: [], // empty so welcome shows
+        chat_messages: [], // empty so welcome shows
         createdAt: new Date().toISOString(),
       };
       setPendingThread(newThread);
@@ -81,7 +81,7 @@ export default function Sidebar({
     const newThread = {
       id: crypto.randomUUID(),
       title: "New Chat",
-      messages: [], // empty to show welcome
+      chat_messages: [], // empty to show welcome
       createdAt: new Date().toISOString(),
     };
     setPendingThread(newThread);
@@ -159,18 +159,15 @@ export default function Sidebar({
                         : "text-white hover:bg-gray-100 hover:text-gray-900"
                     }`}
                   >
-                    {t.messages[0]?.content || t.title || "New Chat"}
+                    {t.chat_messages[0]?.content
+                      .split(" ")
+                      .slice(0, 2)
+                      .join(" ") ||
+                      t.title ||
+                      "New Chat"}
                   </div>
                 ),
               )}
-
-              {/* Optional: we can remove +NewChat button because click sidebar already handles it */}
-              {/* <div
-                className="cursor-pointer text-white p-2 mt-2 text-center hover:bg-gray-700 rounded"
-                onClick={startNewChat}
-              >
-                Start New Chat
-              </div> */}
             </div>
           )}
         </div>

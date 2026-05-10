@@ -19,8 +19,16 @@ export default function ChatWindow() {
     setActiveThread,
     pendingThread,
     setPendingThread,
+    addToBuffer,
+    messageBuffer,
+    clearBuffer,
   } = useThreadStore();
-
+  console.log(
+    "ChatWindow render - activeThread:",
+    activeThread,
+    "threads:",
+    threads,
+  );
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -29,7 +37,7 @@ export default function ChatWindow() {
   }, [threads, activeThread, pendingThread]);
 
   const getCurrentThread = (): Thread | null => {
-    if (!activeThread) return null;
+    if (!activeThread) return threads.length > 0 ? threads[0] : null;
     if (pendingThread && pendingThread.id === activeThread)
       return pendingThread;
     return threads.find((t) => t.id === activeThread) || null;
@@ -39,18 +47,29 @@ export default function ChatWindow() {
     if (!content.trim()) return;
 
     let currentThread = getCurrentThread();
+    console.log("Sending message to thread:", currentThread?.id);
 
     // Lazy create thread if none exists
-    if (!currentThread) {
-      const newThread: Thread = {
-        id: crypto.randomUUID(),
-        title: "New Chat",
-        messages: [],
-        createdAt: new Date().toISOString(),
-      };
-      setPendingThread(newThread);
-      setActiveThread(newThread.id);
-      currentThread = newThread;
+    if (!currentThread || !currentThread.saved) {
+      const res = await fetch("/api/threads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "New Chat",
+          id: currentThread?.id || null,
+          // company_id: "company_123", // optional if multi-company
+        }),
+      });
+      const thread = await res.json();
+      currentThread = thread;
+      if (currentThread) {
+        currentThread.saved = true; // Mark as saved to avoid re-creation
+        setActiveThread(currentThread.id);
+        setPendingThread(currentThread);
+      } else {
+        setActiveThread(thread.id);
+        setPendingThread(thread);
+      }
     }
 
     const userMessage: ChatMessage = {
@@ -60,45 +79,39 @@ export default function ChatWindow() {
       timestamp: new Date().toISOString(),
     };
 
+    // Add message to local state
     let updatedThreads: Thread[];
     if (pendingThread && pendingThread.id === activeThread) {
-      const newThread: Thread = { ...pendingThread, messages: [userMessage] };
+      const newThread: Thread = {
+        ...pendingThread,
+        chat_messages: [userMessage],
+      };
       updatedThreads = [newThread, ...threads];
       setThreads(updatedThreads);
       setPendingThread(null);
     } else {
       updatedThreads = threads.map((t) =>
         t.id === activeThread
-          ? { ...t, messages: [...t.messages, userMessage] }
+          ? { ...t, chat_messages: [...t.chat_messages, userMessage] }
           : t,
       );
       setThreads(updatedThreads);
     }
 
-    setInput("");
+    // Add to message buffer
+    addToBuffer(userMessage);
 
-    // Bot typing
-    const botTyping: ChatMessage = {
-      id: Date.now() + 1,
-      type: "bot",
-      content: "Typing...",
-      timestamp: new Date().toISOString(),
-    };
-    updatedThreads = updatedThreads.map((t) =>
-      t.id === activeThread
-        ? { ...t, messages: [...t.messages, botTyping] }
-        : t,
-    );
-    setThreads(updatedThreads);
+    setInput("");
 
     try {
       const aiData = await fetchAIResponse(content);
+
       updatedThreads = updatedThreads.map((t) =>
         t.id === activeThread
           ? {
               ...t,
-              messages: [
-                ...t.messages.filter((m) => m.id !== botTyping.id),
+              chat_messages: [
+                ...t.chat_messages,
                 {
                   id: Date.now() + 2,
                   type: aiData.type,
@@ -110,13 +123,21 @@ export default function ChatWindow() {
           : t,
       );
       setThreads(updatedThreads);
+
+      // Add AI response to buffer
+      addToBuffer({
+        id: Date.now() + 2,
+        type: aiData.type,
+        content: aiData.data,
+        timestamp: new Date().toISOString(),
+      });
     } catch (err: any) {
       updatedThreads = updatedThreads.map((t) =>
         t.id === activeThread
           ? {
               ...t,
-              messages: [
-                ...t.messages.filter((m) => m.id !== botTyping.id),
+              chat_messages: [
+                ...t.chat_messages,
                 {
                   id: Date.now() + 2,
                   type: "error",
@@ -128,9 +149,38 @@ export default function ChatWindow() {
           : t,
       );
       setThreads(updatedThreads);
+
+      // Add error to buffer
+      addToBuffer({
+        id: Date.now() + 2,
+        type: "error",
+        content: { message: err.message },
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Optionally: batch save if buffer reaches size limit
+    if (messageBuffer.length >= 5) {
+      await flushMessagesToDB(activeThread);
     }
   };
+  const flushMessagesToDB = async (threadId: string | null) => {
+    if (!threadId || messageBuffer.length === 0) return;
 
+    try {
+      // Example API call
+      await fetch("/api/threads/" + threadId + "/messages", {
+        method: "POST",
+        body: JSON.stringify({ messages: messageBuffer }),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      clearBuffer(); // clear buffer after save
+    } catch (err) {
+      console.error("Failed to flush messages to DB", err);
+      // Can retry later
+    }
+  };
   const handleSend = () => {
     if (!input.trim()) return;
     sendMessage(input);
@@ -170,7 +220,7 @@ export default function ChatWindow() {
   };
 
   const currentThread = getCurrentThread();
-  const showWelcome = currentThread && currentThread.messages.length === 0;
+  const showWelcome = currentThread && currentThread.chat_messages.length === 0;
 
   return (
     <div className="h-screen p-4">
@@ -199,7 +249,7 @@ export default function ChatWindow() {
         )}
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3 rounded-lg scrollbar-thin scrollbar-thumb-sky-800 scrollbar-track-sky-500">
-          {currentThread?.messages.map((msg: ChatMessage) => (
+          {currentThread?.chat_messages.map((msg: ChatMessage) => (
             <div
               key={msg.id}
               className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}

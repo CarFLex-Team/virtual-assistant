@@ -1,4 +1,4 @@
-// stores/threadStore.ts
+// store/threadStore.ts
 import { create } from "zustand";
 
 export type ChatMessage = {
@@ -19,24 +19,49 @@ export type ChatMessage = {
 export type Thread = {
   id: string;
   title?: string;
-  messages: ChatMessage[];
+  chat_messages: ChatMessage[];
   createdAt: string;
+  saved?: boolean;
 };
 
 interface ThreadState {
   threads: Thread[];
   setThreads: (threads: Thread[]) => void;
+
   activeThread: string | null;
   setActiveThread: (id: string | null) => void;
+
   pendingThread: Thread | null;
   setPendingThread: (thread: Thread | null) => void;
+
+  messageBuffer: ChatMessage[];
+  addToBuffer: (msg: ChatMessage) => void;
+  setMessageBuffer: (msgs: ChatMessage[]) => void;
+  clearBuffer: () => void;
 }
 
-export const useThreadStore = create<ThreadState>((set) => ({
+export const useThreadStore = create<ThreadState>((set, get) => ({
   threads: [],
   setThreads: (threads) => set({ threads }),
+
   activeThread: null,
   setActiveThread: (id) => set({ activeThread: id }),
+
   pendingThread: null,
   setPendingThread: (thread) => set({ pendingThread: thread }),
+
+  messageBuffer: [],
+  addToBuffer: (msg) => {
+    set({ messageBuffer: [...get().messageBuffer, msg] });
+    // localStorage.setItem(
+    //   `messageBuffer ${get().activeThread}`,
+    //   JSON.stringify([...get().messageBuffer, msg]),
+    // );
+  },
+  setMessageBuffer: (msgs) => {
+    set({ messageBuffer: msgs });
+  },
+  clearBuffer: () => {
+    set({ messageBuffer: [] });
+  },
 }));
