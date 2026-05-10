@@ -1,5 +1,5 @@
 "use client";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   PanelLeftClose,
@@ -8,65 +8,39 @@ import {
   ChartColumnDecreasing,
 } from "lucide-react";
 import NavButton from "../ui/NavButton";
-import { saveThreads, loadThreads } from "@/utils/storage";
+import { useThreadStore } from "@/store/threadStore";
 
 export default function Sidebar({
   open,
   setOpen,
-  // activeThread,
-  // setActiveThread,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
-  // activeThread: string | null;
-  // setActiveThread: (id: string) => void;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const threadIdFromUrl = searchParams.get("threadId");
-  const [threads, setThreads] = useState<any[]>([]);
+
+  const {
+    threads,
+    setThreads,
+    activeThread,
+    setActiveThread,
+    pendingThread,
+    setPendingThread,
+  } = useThreadStore();
+
   const [activeNav, setActiveNav] = useState<string | null>(null);
-  const [activeThread, setActiveThread] = useState<string | null>(
-    threadIdFromUrl,
-  );
-
-  useEffect(() => {
-    const saved = loadThreads();
-    setThreads(saved);
-  }, [activeThread]);
-  useEffect(() => {
-    if (threadIdFromUrl && threadIdFromUrl !== activeThread) {
-      setActiveThread(threadIdFromUrl);
-    }
-  }, []);
-  useEffect(() => {
-    const current = navItems.find((i) => i.href === window.location.pathname);
-    setActiveNav(current?.label || null);
-  }, []);
-
-  const setActiveThreadAndUrl = (id: string) => {
-    setActiveThread(id);
-    router.push(`/?threadId=${id}`);
-  };
-  const startNewChat = () => {
-    const newThread = {
-      id: crypto.randomUUID(),
-      title: "New Chat",
-      messages: [],
-      createdAt: new Date().toISOString(),
-    };
-    setThreads([newThread, ...threads]); // state updates
-    setActiveThread(newThread.id);
-    saveThreads([newThread, ...threads]); // persist to localStorage
-    router.push(`/?threadId=${newThread.id}`);
-  };
 
   const navItems = [
     {
-      id: "VirtualAssistant",
-      label: "Virtual Assistant",
+      id: "NewChat",
+      label: "New Chat",
       href: "/",
       icon: MessageSquare,
+      onClick: () => {
+        startNewChat();
+      },
     },
     {
       id: "Stats",
@@ -75,9 +49,57 @@ export default function Sidebar({
       icon: ChartColumnDecreasing,
     },
   ];
+
+  // Sync URL param with active thread
+  useEffect(() => {
+    if (threadIdFromUrl && threadIdFromUrl !== activeThread) {
+      setActiveThread(threadIdFromUrl);
+    }
+  }, [threadIdFromUrl]);
+
+  // Highlight nav based on current page
+  useEffect(() => {
+    const current = navItems.find((i) => i.href === window.location.pathname);
+    setActiveNav(current?.label || null);
+  }, []);
+  useEffect(() => {
+    // If we are on "/" and no active thread exists, create a pending thread
+    if (window.location.pathname === "/" && !activeThread && !pendingThread) {
+      const newThread = {
+        id: crypto.randomUUID(),
+        title: "New Chat",
+        messages: [], // empty so welcome shows
+        createdAt: new Date().toISOString(),
+      };
+      setPendingThread(newThread);
+      setActiveThread(newThread.id);
+      setActiveNav("New Chat");
+    }
+  }, [activeThread, pendingThread, setActiveThread, setPendingThread]);
+  // Click "New Chat" in sidebar
+  const startNewChat = () => {
+    const newThread = {
+      id: crypto.randomUUID(),
+      title: "New Chat",
+      messages: [], // empty to show welcome
+      createdAt: new Date().toISOString(),
+    };
+    setPendingThread(newThread);
+    setActiveThread(newThread.id);
+    setActiveNav("New Chat");
+    // no router.push — stay on same page
+  };
+
+  const setActiveThreadAndUrl = (id: string) => {
+    setActiveThread(id);
+    router.push(`/?threadId=${id}`);
+  };
+
   return (
     <aside
-      className={`h-screen flex flex-col bg-background border-r-2 border-r-sky-950 px-4 py-6 transform transition-transform ${open ? "w-58 max-md:translate-x-0" : "w-16 max-md:-translate-x-full"}`}
+      className={`h-screen flex flex-col bg-background border-r-2 border-r-sky-950 px-4 py-6 transform transition-transform ${
+        open ? "w-58 max-md:translate-x-0" : "w-16 max-md:-translate-x-full"
+      }`}
     >
       <div className="overflow-auto">
         {/* Logo & toggle */}
@@ -103,7 +125,10 @@ export default function Sidebar({
           {navItems.map((item) => (
             <NavButton
               key={item.href}
-              onClick={() => setActiveNav(item.label)}
+              onClick={() => {
+                setActiveNav(item.label);
+                item.onClick && item.onClick();
+              }}
               item={item}
               isActive={activeNav === item.label}
               className={
@@ -123,21 +148,29 @@ export default function Sidebar({
               <p className={`text-gray-400 ${open ? "px-4 py-1" : ""}`}>
                 Recent Chats
               </p>
-              {threads.map((t) => (
-                <div
-                  key={t.id}
-                  onClick={() => setActiveThreadAndUrl(t.id)}
-                  className={`cursor-pointer p-2 my-1 rounded ${t.id === activeThread ? "bg-blue-100" : "text-white hover:bg-gray-100 hover:text-gray-900"} `}
-                >
-                  {t.messages[0]?.content || t.title || "New Chat"}
-                </div>
-              ))}
-              <button
-                className="bg-sky-900 text-white p-2 my-2 rounded w-full hover:bg-sky-800 transition-colors duration-200 cursor-pointer"
+              {[...(pendingThread ? [pendingThread] : []), ...threads].map(
+                (t) => (
+                  <div
+                    key={t.id}
+                    onClick={() => setActiveThreadAndUrl(t.id)}
+                    className={`cursor-pointer p-2 my-1 rounded ${
+                      t.id === activeThread
+                        ? "bg-blue-100"
+                        : "text-white hover:bg-gray-100 hover:text-gray-900"
+                    }`}
+                  >
+                    {t.messages[0]?.content || t.title || "New Chat"}
+                  </div>
+                ),
+              )}
+
+              {/* Optional: we can remove +NewChat button because click sidebar already handles it */}
+              {/* <div
+                className="cursor-pointer text-white p-2 mt-2 text-center hover:bg-gray-700 rounded"
                 onClick={startNewChat}
               >
-                + New Chat
-              </button>
+                Start New Chat
+              </div> */}
             </div>
           )}
         </div>

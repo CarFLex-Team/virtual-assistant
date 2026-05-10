@@ -18,8 +18,8 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
       <Sidebar
         open={sidebarOpen}
         setOpen={setSidebarOpen}
-        activeThread={activeThread}
-        setActiveThread={setActiveThread}
+        // activeThread={activeThread}
+        // setActiveThread={setActiveThread}
       />
 
       <div className="flex flex-col flex-1 overflow-auto">

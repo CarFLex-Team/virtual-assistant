@@ -1,56 +1,56 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowUp } from "lucide-react";
 import Message from "./MessageBubble";
 import StatsChart from "./StatsChart";
-import { ArrowUp } from "lucide-react";
-// import { fetchStats } from "@/utils/api";
-import { ChatMessage, MessageType } from "./type";
 import TableView from "./TableView";
 import RankingView from "./RankingView";
 import DistributionView from "./DistributionView";
 import Clarification from "./Clarification";
 import ErrorBubble from "./ErrorBubble";
-import { loadThreads, saveThreads } from "@/utils/storage";
 import { fetchAIResponse } from "@/utils/api";
-import { useSearchParams } from "next/navigation";
+import { useThreadStore, Thread, ChatMessage } from "@/store/threadStore";
+
 export default function ChatWindow() {
-  const searchParams = useSearchParams();
-  const threadIdFromUrl = searchParams.get("threadId");
-  const [threads, setThreads] = useState<any[]>([]);
-  const [activeThread, setActiveThread] = useState<string | null>(
-    threadIdFromUrl,
-  );
-  // const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const {
+    threads,
+    setThreads,
+    activeThread,
+    setActiveThread,
+    pendingThread,
+    setPendingThread,
+  } = useThreadStore();
+
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (threadIdFromUrl && threadIdFromUrl !== activeThread) {
-      setActiveThread(threadIdFromUrl);
-    }
-  }, [threadIdFromUrl]);
-
-  useEffect(() => {
-    const saved = loadThreads();
-    setThreads(saved);
-    if (threadIdFromUrl && threadIdFromUrl !== activeThread) {
-      setActiveThread(threadIdFromUrl);
-    }
-    // if (!activeThread && saved.length > 0) setActiveThread(saved[0].id);
-  }, [threadIdFromUrl]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [threads, activeThread]);
+  }, [threads, activeThread, pendingThread]);
+
+  const getCurrentThread = (): Thread | null => {
+    if (!activeThread) return null;
+    if (pendingThread && pendingThread.id === activeThread)
+      return pendingThread;
+    return threads.find((t) => t.id === activeThread) || null;
+  };
 
   const sendMessage = async (content: string) => {
-    if (!activeThread) {
-      const newThread = {
-        id: Date.now().toString(),
+    if (!content.trim()) return;
+
+    let currentThread = getCurrentThread();
+
+    // Lazy create thread if none exists
+    if (!currentThread) {
+      const newThread: Thread = {
+        id: crypto.randomUUID(),
+        title: "New Chat",
         messages: [],
+        createdAt: new Date().toISOString(),
       };
-      setThreads([newThread, ...threads]);
+      setPendingThread(newThread);
       setActiveThread(newThread.id);
-      saveThreads([newThread, ...threads]);
+      currentThread = newThread;
     }
 
     const userMessage: ChatMessage = {
@@ -60,14 +60,24 @@ export default function ChatWindow() {
       timestamp: new Date().toISOString(),
     };
 
-    let updatedThreads = threads.map((t) =>
-      t.id === activeThread
-        ? { ...t, messages: [...t.messages, userMessage] }
-        : t,
-    );
-    setThreads(updatedThreads);
-    saveThreads(updatedThreads);
+    let updatedThreads: Thread[];
+    if (pendingThread && pendingThread.id === activeThread) {
+      const newThread: Thread = { ...pendingThread, messages: [userMessage] };
+      updatedThreads = [newThread, ...threads];
+      setThreads(updatedThreads);
+      setPendingThread(null);
+    } else {
+      updatedThreads = threads.map((t) =>
+        t.id === activeThread
+          ? { ...t, messages: [...t.messages, userMessage] }
+          : t,
+      );
+      setThreads(updatedThreads);
+    }
 
+    setInput("");
+
+    // Bot typing
     const botTyping: ChatMessage = {
       id: Date.now() + 1,
       type: "bot",
@@ -80,17 +90,15 @@ export default function ChatWindow() {
         : t,
     );
     setThreads(updatedThreads);
-    saveThreads(updatedThreads);
 
     try {
       const aiData = await fetchAIResponse(content);
-
       updatedThreads = updatedThreads.map((t) =>
         t.id === activeThread
           ? {
               ...t,
               messages: [
-                ...t.messages.filter((m: any) => m.id !== botTyping.id),
+                ...t.messages.filter((m) => m.id !== botTyping.id),
                 {
                   id: Date.now() + 2,
                   type: aiData.type,
@@ -102,14 +110,13 @@ export default function ChatWindow() {
           : t,
       );
       setThreads(updatedThreads);
-      saveThreads(updatedThreads);
     } catch (err: any) {
       updatedThreads = updatedThreads.map((t) =>
         t.id === activeThread
           ? {
               ...t,
               messages: [
-                ...t.messages.filter((m: any) => m.id !== botTyping.id),
+                ...t.messages.filter((m) => m.id !== botTyping.id),
                 {
                   id: Date.now() + 2,
                   type: "error",
@@ -121,19 +128,30 @@ export default function ChatWindow() {
           : t,
       );
       setThreads(updatedThreads);
-      saveThreads(updatedThreads);
     }
   };
+
   const handleSend = () => {
     if (!input.trim()) return;
     sendMessage(input);
-    setInput("");
   };
-  function renderMessage(msg: ChatMessage) {
+
+  const SafeMessage = ({ message }: { message: ChatMessage }) => {
+    if (typeof message.content === "object" && message.type === "user") {
+      return (
+        <Message
+          message={{ ...message, content: JSON.stringify(message.content) }}
+        />
+      );
+    }
+    return <Message message={message} />;
+  };
+
+  const renderMessage = (msg: ChatMessage) => {
     switch (msg.type) {
       case "user":
       case "bot":
-        return <Message message={msg} />;
+        return <SafeMessage message={msg} />;
       case "chart":
         return <StatsChart data={msg.content} />;
       case "table":
@@ -147,54 +165,52 @@ export default function ChatWindow() {
       case "error":
         return <ErrorBubble content={msg.content} />;
       default:
-        return <Message message={{ ...msg, type: "bot" }} />;
+        return <SafeMessage message={{ ...msg, type: "bot" }} />;
     }
-  }
-  return (
-    <div className="h-screen p-4 ">
-      <div className="flex flex-col gap-4 h-full bg-[url('/bg-chat.jpg')] bg-cover bg-center  p-4 rounded-lg shadow-lg ">
-        {activeThread &&
-          threads.find((t) => t.id === activeThread)?.messages.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center gap-6 ">
-              <div className="p-6 rounded-2xl bg-linear-to-b from-white to-sky-100 px-4s shadow-lg flex flex-col items-center gap-4 max-w-xs">
-                <img
-                  src="/chat-bot2.png"
-                  alt="Chat Bot"
-                  className="w-32 h-32 object-contain"
-                />
-                <p className="text-center text-gray-700 text-lg font-semibold">
-                  Hi, I'm <span className="text-primary-600">ELIARA</span>, your
-                  AI assistant.
-                </p>
-                <p className="text-center text-gray-500 text-sm">
-                  Ask me anything about your data and I'll provide insights
-                  instantly.
-                </p>
-              </div>
+  };
 
-              {/* Optional tip */}
-              <p className="text-gray-600 text-sm italic">
-                Tip: Try typing a question like "Show me sales for last week"
+  const currentThread = getCurrentThread();
+  const showWelcome = currentThread && currentThread.messages.length === 0;
+
+  return (
+    <div className="h-screen p-4">
+      <div className="flex flex-col gap-4 h-full bg-[url('/bg-chat.jpg')] bg-cover bg-center p-4 rounded-lg shadow-lg ">
+        {showWelcome && (
+          <div className="h-full flex flex-col items-center justify-center gap-6 ">
+            <div className="p-6 rounded-2xl bg-linear-to-b from-white to-sky-100 px-4s shadow-lg flex flex-col items-center gap-4 max-w-xs">
+              <img
+                src="/chat-bot2.png"
+                alt="Chat Bot"
+                className="w-32 h-32 object-contain"
+              />
+              <p className="text-center text-gray-700 text-lg font-semibold">
+                Hi, I'm <span className="text-primary-600">ELIARA</span>, your
+                AI assistant.
+              </p>
+              <p className="text-center text-gray-500 text-sm">
+                Ask me anything about your data and I'll provide insights
+                instantly.
               </p>
             </div>
-          )}
+            <p className="text-gray-600 text-sm italic">
+              Tip: Try typing a question like "Show me sales for last week"
+            </p>
+          </div>
+        )}
+
         <div className="flex-1 overflow-y-auto p-4 space-y-3 rounded-lg scrollbar-thin scrollbar-thumb-sky-800 scrollbar-track-sky-500">
-          {activeThread &&
-            threads
-              .find((t) => t.id === activeThread)
-              ?.messages.map((msg: ChatMessage) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  {renderMessage(msg)}
-                </div>
-              ))}
+          {currentThread?.messages.map((msg: ChatMessage) => (
+            <div
+              key={msg.id}
+              className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}
+            >
+              {renderMessage(msg)}
+            </div>
+          ))}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input area */}
-        <div className="flex gap-2 ">
+        <div className="flex gap-2">
           <input
             type="text"
             className="flex-1 border border-sky-900 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-950"
