@@ -43,7 +43,8 @@ export async function POST(
     // 3️⃣ Insert messages
     const { data: savedMessages, error } = await db
       .from("chat_messages")
-      .insert(messages.map((m: any) => ({ ...m, thread_id: dbThreadId })));
+      .insert(messages.map((m: any) => ({ ...m, thread_id: dbThreadId })))
+      .select();
 
     if (error) throw error;
 

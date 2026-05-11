@@ -72,6 +72,7 @@ export default function Sidebar({
         title: "New Chat",
         chat_messages: [], // empty so welcome shows
         createdAt: new Date().toISOString(),
+        buffer: [],
       };
       setPendingThread(newThread);
       setActiveThread(newThread.id);
@@ -85,6 +86,7 @@ export default function Sidebar({
       title: "New Chat",
       chat_messages: [], // empty to show welcome
       createdAt: new Date().toISOString(),
+      buffer: [],
     };
     setPendingThread(newThread);
     setActiveThread(newThread.id);
@@ -99,11 +101,11 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`h-screen flex flex-col bg-background border-r-2 border-r-sky-950 px-4 py-6 transform transition-transform ${
+      className={`h-screen flex flex-col justify-around sm:justify-between bg-background border-r-2 border-r-sky-950 px-4 py-6 transform  z-10 max-md:fixed max-md:inset-0 transition-transform ${
         open ? "w-58 max-md:translate-x-0" : "w-16 max-md:-translate-x-full"
       }`}
     >
-      <div className="overflow-auto">
+      <div className="">
         {/* Logo & toggle */}
         <div
           className={`flex items-center mb-4 ${open ? "justify-between" : "justify-center"}`}
@@ -129,6 +131,7 @@ export default function Sidebar({
               key={item.href}
               onClick={() => {
                 setActiveNav(item.label);
+                // setActiveThread(null); // deselect any thread when navigating
                 item.onClick && item.onClick();
               }}
               item={item}
@@ -145,8 +148,8 @@ export default function Sidebar({
           ))}
 
           {/* Threads */}
-          {open && (
-            <div className="mt-6">
+          {open && activeNav !== "Statistics" && (
+            <div className="mt-6 overflow-auto">
               <p className={`text-gray-400 ${open ? "px-4 py-1" : ""}`}>
                 Recent Chats
               </p>
@@ -154,7 +157,10 @@ export default function Sidebar({
                 (t) => (
                   <div
                     key={t.id}
-                    onClick={() => setActiveThreadAndUrl(t.id)}
+                    onClick={() => {
+                      setActiveThreadAndUrl(t.id);
+                      setActiveNav(null);
+                    }}
                     className={`cursor-pointer p-2 my-1 rounded ${
                       t.id === activeThread
                         ? "bg-blue-100"

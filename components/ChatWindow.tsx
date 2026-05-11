@@ -37,12 +37,67 @@ export default function ChatWindow() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [threads, activeThread, pendingThread]);
   useEffect(() => {
-    const savedBuffer = localStorage.getItem(`messageBuffer ${activeThread}`);
-    if (savedBuffer) {
-      // console.log("Loaded message buffer from localStorage:", savedBuffer);
-      setMessageBuffer(JSON.parse(savedBuffer));
+    if (!activeThread) return;
+
+    // Get current thread from store
+    let currentThread =
+      threads.find((t) => t.id === activeThread) ||
+      (pendingThread?.id === activeThread ? pendingThread : null);
+
+    if (!currentThread) {
+      // create pending thread if none exists
+      currentThread = {
+        id: activeThread,
+        title: "New Chat",
+        chat_messages: [],
+        buffer: [],
+        createdAt: new Date().toISOString(),
+        saved: false,
+      };
+      setPendingThread(currentThread);
     }
-  }, [activeThread]);
+
+    // Load buffer from localStorage
+    const savedBuffer = localStorage.getItem(`messageBuffer_${activeThread}`);
+    if (!savedBuffer) return;
+
+    const bufferedMessages: ChatMessage[] = JSON.parse(savedBuffer);
+    if (bufferedMessages.length === 0) return;
+
+    // Filter out messages already in chat_messages
+    const existingIds = new Set(currentThread.chat_messages.map((m) => m.id));
+    const newMessages = bufferedMessages.filter((m) => !existingIds.has(m.id));
+
+    if (newMessages.length === 0) return; // <-- prevent unnecessary state updates
+
+    // Merge new messages
+    currentThread.chat_messages = [
+      ...currentThread.chat_messages,
+      ...newMessages,
+    ];
+    currentThread.buffer = bufferedMessages;
+
+    // Update Zustand only if state actually changed
+    if (pendingThread?.id === activeThread) {
+      setPendingThread({ ...currentThread });
+    } else {
+      setThreads(
+        threads.map((t) => (t.id === activeThread ? { ...currentThread } : t)),
+      );
+    }
+  }, [activeThread]); // <-- remove threads/pendingThread from deps to avoid loop
+  // useEffect(() => {
+  //   console.log(
+  //     "Active thread changed, loading message buffer from localStorage:",
+  //     activeThread,
+  //   );
+  //   const savedBuffer = localStorage.getItem(`messageBuffer ${activeThread}`);
+  //   console.log("messageBuffer", activeThread, "saved buffer ", savedBuffer);
+  //   if (savedBuffer) {
+  //     // console.log("Loaded message buffer from localStorage:", savedBuffer);
+  //     setMessageBuffer(JSON.parse(savedBuffer));
+  //   }
+  // }, [activeThread]);
 
   const getCurrentThread = (): Thread | null => {
     if (!activeThread) return threads.length > 0 ? threads[0] : null;
@@ -55,140 +110,104 @@ export default function ChatWindow() {
     if (!content.trim()) return;
 
     let currentThread = getCurrentThread();
-    // console.log("Sending message to thread:", currentThread?.id);
 
-    // Lazy create thread if none exists
+    // 1️⃣ Lazy create thread if none exists
     if (!currentThread) {
-      const res = await fetch("/api/threads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: "New Chat",
-          // id: currentThread?.id || null,
-          // company_id: "company_123", // optional if multi-company
-        }),
-      });
-      const thread = await res.json();
-      currentThread = thread;
-      console.log("Created new thread:", thread);
-      if (currentThread) {
-        currentThread.saved = true;
-        setActiveThread(currentThread.id);
-        setPendingThread(currentThread);
-      } else {
-        setActiveThread(thread.id);
-        setPendingThread(thread);
-      }
+      const threadId = crypto.randomUUID();
+      currentThread = {
+        id: threadId,
+        title: "New Chat",
+        chat_messages: [],
+        buffer: [],
+        createdAt: new Date().toISOString(),
+        saved: false,
+      };
+      setPendingThread(currentThread);
+      setActiveThread(threadId);
     }
 
+    // 2️⃣ Create user message
     const userMessage: ChatMessage = {
       id: Date.now(),
       type: "user",
       content,
       timestamp: new Date().toISOString(),
     };
+    console.log("currentThread before adding message:", currentThread);
+    // 3️⃣ Add message to chat_messages & buffer
+    currentThread.chat_messages.push(userMessage);
+    currentThread.buffer.push(userMessage);
 
-    // Add message to local state
-    let updatedThreads: Thread[];
-    if (pendingThread && pendingThread.id === activeThread) {
-      console.log("Adding message to pending thread:", pendingThread.id);
-      const newThread: Thread = {
-        ...pendingThread,
-        chat_messages: [userMessage],
-      };
-      updatedThreads = [newThread, ...threads];
-      setThreads(updatedThreads);
-      setPendingThread(null);
+    // 4️⃣ Update Zustand
+    if (pendingThread?.id === currentThread.id) {
+      setPendingThread(currentThread);
     } else {
-      updatedThreads = threads.map((t) =>
-        t.id === activeThread
-          ? { ...t, chat_messages: [...t.chat_messages, userMessage] }
-          : t,
+      setThreads(
+        threads.map((t) => (t.id === currentThread!.id ? currentThread! : t)),
       );
-      setThreads(updatedThreads);
     }
-
-    // Add to message buffer
-    addToBuffer(userMessage);
 
     setInput("");
 
+    if (pendingThread?.id === currentThread.id) {
+      setPendingThread(currentThread);
+    } else {
+      setThreads(
+        threads.map((t) => (t.id === currentThread!.id ? currentThread! : t)),
+      );
+    }
+
+    // 6️⃣ Fetch AI response
     try {
       const aiData = await fetchAIResponse(content);
-
-      updatedThreads = updatedThreads.map((t) =>
-        t.id === activeThread
-          ? {
-              ...t,
-              chat_messages: [
-                ...t.chat_messages,
-                {
-                  id: Date.now() + 2,
-                  type: aiData.type,
-                  content: aiData.data,
-                  timestamp: new Date().toISOString(),
-                },
-              ],
-            }
-          : t,
-      );
-      setThreads(updatedThreads);
-
-      // Add AI response to buffer
-      addToBuffer({
+      const aiMessage: ChatMessage = {
         id: Date.now() + 2,
         type: aiData.type,
         content: aiData.data,
         timestamp: new Date().toISOString(),
-      });
-    } catch (err: any) {
-      updatedThreads = updatedThreads.map((t) =>
-        t.id === activeThread
-          ? {
-              ...t,
-              chat_messages: [
-                ...t.chat_messages,
-                {
-                  id: Date.now() + 2,
-                  type: "error",
-                  content: { message: err.message },
-                  timestamp: new Date().toISOString(),
-                },
-              ],
-            }
-          : t,
-      );
-      setThreads(updatedThreads);
+      };
 
-      // Add error to buffer
-      addToBuffer({
-        id: Date.now() + 2,
-        type: "error",
-        content: { message: err.message },
-        timestamp: new Date().toISOString(),
-      });
+      currentThread.chat_messages.push(aiMessage);
+      currentThread.buffer.push(aiMessage);
+      localStorage.setItem(
+        `messageBuffer_${currentThread.id}`,
+        JSON.stringify(currentThread.buffer),
+      );
+      if (pendingThread?.id === currentThread.id) {
+        setPendingThread(currentThread);
+      } else {
+        setThreads(
+          threads.map((t) => (t.id === currentThread!.id ? currentThread! : t)),
+        );
+      }
+    } catch (err) {
+      // handle error similarly
     }
 
-    // Optionally: batch save if buffer reaches size limit
-    if (messageBuffer.length >= 5) {
-      await flushMessagesToDB(activeThread);
+    // 7️⃣ Optional: flush buffer if >= 5 messages
+    if (currentThread.buffer.length >= 5) {
+      flushMessagesToDB(currentThread.id);
     }
   };
-  const flushMessagesToDB = async (threadId: string | null) => {
-    if (!threadId || messageBuffer.length === 0) return;
+  const flushMessagesToDB = async (threadId: string) => {
+    const thread = threads.find((t) => t.id === threadId) || pendingThread;
+    if (!thread || thread.buffer.length === 0) return;
 
     try {
-      // Example API call
-      await fetch("/api/threads/" + threadId + "/messages", {
+      await fetch(`/api/threads/${threadId}/messages`, {
         method: "POST",
-        body: JSON.stringify({ messages: messageBuffer }),
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: thread.buffer }),
       });
 
-      clearBuffer(); // clear buffer after save
+      // Clear buffer after flush
+      thread.buffer = [];
+
+      if (pendingThread?.id === threadId) setPendingThread(thread);
+      else setThreads(threads.map((t) => (t.id === threadId ? thread : t)));
+      localStorage.removeItem(`messageBuffer_${threadId}`);
     } catch (err) {
-      console.error("Failed to flush messages to DB", err);
-      // Can retry later
+      console.error("Failed to flush messages", err);
     }
   };
   const handleSend = () => {
@@ -230,10 +249,11 @@ export default function ChatWindow() {
   };
 
   const currentThread = getCurrentThread();
+  const displayedMessages = currentThread ? currentThread.chat_messages : [];
   const showWelcome = currentThread && currentThread.chat_messages.length === 0;
 
   return (
-    <div className="h-screen p-4">
+    <div className="h-[95vh] p-4 ">
       <div className="flex flex-col gap-4 h-full bg-[url('/bg-chat.jpg')] bg-cover bg-center p-4 rounded-lg shadow-lg ">
         {showWelcome && (
           <div className="h-full flex flex-col items-center justify-center gap-6 ">
@@ -259,7 +279,7 @@ export default function ChatWindow() {
         )}
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3 rounded-lg scrollbar-thin scrollbar-thumb-sky-800 scrollbar-track-sky-500">
-          {currentThread?.chat_messages.map((msg: ChatMessage) => (
+          {displayedMessages.map((msg: ChatMessage) => (
             <div
               key={msg.id}
               className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}

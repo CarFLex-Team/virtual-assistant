@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Sidebar from "./Nav/Sidebar";
 import { useThreadStore } from "@/store/threadStore";
+import TopNav from "./Nav/TopNav";
 
 export default function PageShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -14,7 +15,7 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
       const res = await fetch(`/api/threads`);
       const data = await res.json();
       // console.log("Loaded threads:", data);
-      setThreads(data.map((t: any) => ({ ...t, saved: true })));
+      setThreads(data.map((t: any) => ({ ...t, saved: true, buffer: [] })));
       setThreadsLoaded(true);
       // setActiveThread(data.length > 0 ? data[0].id : null);
     };
@@ -29,9 +30,11 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
         // activeThread={activeThread}
         // setActiveThread={setActiveThread}
       />
-
-      <div className="flex flex-col flex-1 overflow-auto">
-        <main className="flex-1  bg-background ">{children}</main>
+      <div className="flex flex-col flex-1">
+        <TopNav onMenuClick={() => setSidebarOpen(true)} />
+        <div className=" flex-1 overflow-auto">
+          <main className="flex-1  bg-background ">{children}</main>
+        </div>
       </div>
     </div>
   );
