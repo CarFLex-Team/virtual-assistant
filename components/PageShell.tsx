@@ -5,15 +5,17 @@ import { useThreadStore } from "@/store/threadStore";
 
 export default function PageShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
+  const [threadsLoaded, setThreadsLoaded] = useState(false);
   const { setThreads } = useThreadStore();
 
   useEffect(() => {
     const loadThreads = async () => {
+      setThreadsLoaded(false);
       const res = await fetch(`/api/threads`);
       const data = await res.json();
       // console.log("Loaded threads:", data);
       setThreads(data.map((t: any) => ({ ...t, saved: true })));
+      setThreadsLoaded(true);
       // setActiveThread(data.length > 0 ? data[0].id : null);
     };
     loadThreads();
@@ -23,6 +25,7 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
       <Sidebar
         open={sidebarOpen}
         setOpen={setSidebarOpen}
+        threadsLoaded={threadsLoaded}
         // activeThread={activeThread}
         // setActiveThread={setActiveThread}
       />

@@ -52,16 +52,17 @@ export const useThreadStore = create<ThreadState>((set, get) => ({
 
   messageBuffer: [],
   addToBuffer: (msg) => {
+    localStorage.setItem(
+      `messageBuffer ${get().activeThread}`,
+      JSON.stringify([...get().messageBuffer, msg]),
+    );
     set({ messageBuffer: [...get().messageBuffer, msg] });
-    // localStorage.setItem(
-    //   `messageBuffer ${get().activeThread}`,
-    //   JSON.stringify([...get().messageBuffer, msg]),
-    // );
   },
   setMessageBuffer: (msgs) => {
     set({ messageBuffer: msgs });
   },
   clearBuffer: () => {
+    localStorage.removeItem(`messageBuffer ${get().activeThread}`);
     set({ messageBuffer: [] });
   },
 }));

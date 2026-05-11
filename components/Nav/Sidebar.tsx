@@ -13,9 +13,11 @@ import { useThreadStore } from "@/store/threadStore";
 export default function Sidebar({
   open,
   setOpen,
+  threadsLoaded,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
+  threadsLoaded: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -55,7 +57,7 @@ export default function Sidebar({
     if (threadIdFromUrl && threadIdFromUrl !== activeThread) {
       setActiveThread(threadIdFromUrl);
     }
-  }, [threadIdFromUrl]);
+  }, [threadIdFromUrl, threadsLoaded]);
 
   // Highlight nav based on current page
   useEffect(() => {

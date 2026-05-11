@@ -22,19 +22,27 @@ export default function ChatWindow() {
     addToBuffer,
     messageBuffer,
     clearBuffer,
+    setMessageBuffer,
   } = useThreadStore();
-  console.log(
-    "ChatWindow render - activeThread:",
-    activeThread,
-    "threads:",
-    threads,
-  );
+  // console.log(
+  //   "ChatWindow render - activeThread:",
+  //   activeThread,
+  //   "threads:",
+  //   threads,
+  // );
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [threads, activeThread, pendingThread]);
+  useEffect(() => {
+    const savedBuffer = localStorage.getItem(`messageBuffer ${activeThread}`);
+    if (savedBuffer) {
+      // console.log("Loaded message buffer from localStorage:", savedBuffer);
+      setMessageBuffer(JSON.parse(savedBuffer));
+    }
+  }, [activeThread]);
 
   const getCurrentThread = (): Thread | null => {
     if (!activeThread) return threads.length > 0 ? threads[0] : null;
@@ -47,23 +55,24 @@ export default function ChatWindow() {
     if (!content.trim()) return;
 
     let currentThread = getCurrentThread();
-    console.log("Sending message to thread:", currentThread?.id);
+    // console.log("Sending message to thread:", currentThread?.id);
 
     // Lazy create thread if none exists
-    if (!currentThread || !currentThread.saved) {
+    if (!currentThread) {
       const res = await fetch("/api/threads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: "New Chat",
-          id: currentThread?.id || null,
+          // id: currentThread?.id || null,
           // company_id: "company_123", // optional if multi-company
         }),
       });
       const thread = await res.json();
       currentThread = thread;
+      console.log("Created new thread:", thread);
       if (currentThread) {
-        currentThread.saved = true; // Mark as saved to avoid re-creation
+        currentThread.saved = true;
         setActiveThread(currentThread.id);
         setPendingThread(currentThread);
       } else {
@@ -82,6 +91,7 @@ export default function ChatWindow() {
     // Add message to local state
     let updatedThreads: Thread[];
     if (pendingThread && pendingThread.id === activeThread) {
+      console.log("Adding message to pending thread:", pendingThread.id);
       const newThread: Thread = {
         ...pendingThread,
         chat_messages: [userMessage],
