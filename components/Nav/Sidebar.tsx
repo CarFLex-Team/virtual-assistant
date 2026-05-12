@@ -6,6 +6,7 @@ import {
   PanelLeftOpen,
   MessageSquare,
   ChartColumnDecreasing,
+  Trash,
 } from "lucide-react";
 import NavButton from "../ui/NavButton";
 import { useThreadStore } from "@/store/threadStore";
@@ -28,12 +29,12 @@ export default function Sidebar({
     setThreads,
     activeThread,
     setActiveThread,
-    pendingThread,
-    setPendingThread,
+    pendingThreads,
+    setPendingThreads,
   } = useThreadStore();
 
   const [activeNav, setActiveNav] = useState<string | null>(null);
-
+  console.log("Sidebar render", { threads, pendingThreads });
   const navItems = [
     {
       id: "NewChat",
@@ -66,7 +67,11 @@ export default function Sidebar({
   }, []);
   useEffect(() => {
     // If we are on "/" and no active thread exists, create a pending thread
-    if (window.location.pathname === "/" && !activeThread && !pendingThread) {
+    if (
+      window.location.pathname === "/" &&
+      !activeThread &&
+      pendingThreads === null
+    ) {
       const newThread = {
         id: crypto.randomUUID(),
         title: "New Chat",
@@ -74,11 +79,11 @@ export default function Sidebar({
         createdAt: new Date().toISOString(),
         buffer: [],
       };
-      setPendingThread(newThread);
+      setPendingThreads([newThread, ...(pendingThreads || [])]);
       setActiveThread(newThread.id);
       setActiveNav("New Chat");
     }
-  }, [activeThread, pendingThread, setActiveThread, setPendingThread]);
+  }, [activeThread, pendingThreads, setActiveThread, setPendingThreads]);
   // Click "New Chat" in sidebar
   const startNewChat = () => {
     const newThread = {
@@ -88,7 +93,7 @@ export default function Sidebar({
       createdAt: new Date().toISOString(),
       buffer: [],
     };
-    setPendingThread(newThread);
+    setPendingThreads([newThread, ...(pendingThreads || [])]);
     setActiveThread(newThread.id);
     setActiveNav("New Chat");
     // no router.push — stay on same page
@@ -98,7 +103,20 @@ export default function Sidebar({
     setActiveThread(id);
     router.push(`/?threadId=${id}`);
   };
-
+  const handleThreadDelete = (id: string, e: any) => {
+    e.stopPropagation(); // prevent triggering thread select
+    fetch(`/api/threads/${id}`, {
+      method: "DELETE",
+    }).then((res) => {
+      if (res.ok) {
+        // Remove the thread from the list
+        setThreads(threads.filter((t) => t.id !== id));
+        if (activeThread === id) {
+          setActiveThread(null);
+        }
+      }
+    });
+  };
   return (
     <aside
       className={`h-screen flex flex-col justify-around sm:justify-between bg-background border-r-2 border-r-sky-950 px-4 py-6 transform  z-10 max-md:fixed max-md:inset-0 transition-transform ${
@@ -153,7 +171,7 @@ export default function Sidebar({
               <p className={`text-gray-400 ${open ? "px-4 py-1" : ""}`}>
                 Recent Chats
               </p>
-              {[...(pendingThread ? [pendingThread] : []), ...threads].map(
+              {[...(pendingThreads ? pendingThreads : []), ...threads].map(
                 (t) => (
                   <div
                     key={t.id}
@@ -161,18 +179,31 @@ export default function Sidebar({
                       setActiveThreadAndUrl(t.id);
                       setActiveNav(null);
                     }}
-                    className={`cursor-pointer p-2 my-1 rounded ${
+                    className={`cursor-pointer p-2 my-1 rounded flex justify-between items-center ${
                       t.id === activeThread
                         ? "bg-blue-100"
                         : "text-white hover:bg-gray-100 hover:text-gray-900"
                     }`}
                   >
-                    {t.chat_messages[0]?.content
-                      .split(" ")
-                      .slice(0, 2)
-                      .join(" ") ||
-                      t.title ||
-                      "New Chat"}
+                    <p>
+                      {t.chat_messages[0]?.content
+                        .split(" ")
+                        .slice(0, 2)
+                        .join(" ") ||
+                        t.buffer[0]?.content.split(" ").slice(0, 2).join(" ") ||
+                        t.title ||
+                        "New Chat"}
+                    </p>
+                    {t.saved && (
+                      <div
+                        onClick={(e) => {
+                          handleThreadDelete(t.id, e);
+                        }}
+                        className="p-1 hover:bg-red-300 text-red-500 rounded-lg"
+                      >
+                        <Trash size={18} />
+                      </div>
+                    )}
                   </div>
                 ),
               )}

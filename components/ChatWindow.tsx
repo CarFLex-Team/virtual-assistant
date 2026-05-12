@@ -17,8 +17,8 @@ export default function ChatWindow() {
     setThreads,
     activeThread,
     setActiveThread,
-    pendingThread,
-    setPendingThread,
+    pendingThreads,
+    setPendingThreads,
     addToBuffer,
     messageBuffer,
     clearBuffer,
@@ -35,30 +35,24 @@ export default function ChatWindow() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [threads, activeThread, pendingThread]);
+  }, [threads, activeThread, pendingThreads]);
   useEffect(() => {
     if (!activeThread) return;
 
     // Get current thread from store
     let currentThread =
       threads.find((t) => t.id === activeThread) ||
-      (pendingThread?.id === activeThread ? pendingThread : null);
+      pendingThreads?.find((t) => t.id === activeThread) ||
+      null;
 
     if (!currentThread) {
       // create pending thread if none exists
-      currentThread = {
-        id: activeThread,
-        title: "New Chat",
-        chat_messages: [],
-        buffer: [],
-        createdAt: new Date().toISOString(),
-        saved: false,
-      };
-      setPendingThread(currentThread);
+      currentThread = pendingThreads?.[0] || threads[0] || null;
+      setActiveThread(currentThread?.id || null);
     }
 
     // Load buffer from localStorage
-    const savedBuffer = localStorage.getItem(`messageBuffer_${activeThread}`);
+    const savedBuffer = localStorage.getItem(`messageBuffer ${activeThread}`);
     if (!savedBuffer) return;
 
     const bufferedMessages: ChatMessage[] = JSON.parse(savedBuffer);
@@ -78,14 +72,18 @@ export default function ChatWindow() {
     currentThread.buffer = bufferedMessages;
 
     // Update Zustand only if state actually changed
-    if (pendingThread?.id === activeThread) {
-      setPendingThread({ ...currentThread });
+    if (pendingThreads?.some((t) => t.id === activeThread)) {
+      setPendingThreads(
+        pendingThreads.map((t) =>
+          t.id === activeThread ? { ...currentThread } : t,
+        ),
+      );
     } else {
       setThreads(
         threads.map((t) => (t.id === activeThread ? { ...currentThread } : t)),
       );
     }
-  }, [activeThread]); // <-- remove threads/pendingThread from deps to avoid loop
+  }, [activeThread, pendingThreads]); // <-- remove threads/pendingThreads from deps to avoid loop
   // useEffect(() => {
   //   console.log(
   //     "Active thread changed, loading message buffer from localStorage:",
@@ -101,8 +99,8 @@ export default function ChatWindow() {
 
   const getCurrentThread = (): Thread | null => {
     if (!activeThread) return threads.length > 0 ? threads[0] : null;
-    if (pendingThread && pendingThread.id === activeThread)
-      return pendingThread;
+    if (pendingThreads?.some((t) => t.id === activeThread))
+      return pendingThreads.find((t) => t.id === activeThread) || null;
     return threads.find((t) => t.id === activeThread) || null;
   };
 
@@ -112,18 +110,52 @@ export default function ChatWindow() {
     let currentThread = getCurrentThread();
 
     // 1️⃣ Lazy create thread if none exists
-    if (!currentThread) {
-      const threadId = crypto.randomUUID();
-      currentThread = {
-        id: threadId,
-        title: "New Chat",
-        chat_messages: [],
-        buffer: [],
-        createdAt: new Date().toISOString(),
-        saved: false,
-      };
-      setPendingThread(currentThread);
-      setActiveThread(threadId);
+    if (!currentThread || !currentThread.saved) {
+      await fetch("/api/threads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: "New Chat", id: currentThread?.id }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("Created thread on server:", data);
+          currentThread = {
+            id: data[0].id,
+            title: data[0].title,
+            chat_messages: [],
+            buffer: [],
+            createdAt: data[0].created_at,
+            saved: true,
+          };
+          console.log("Current thread after creation:", currentThread);
+          // setThreads([currentThread, ...threads]);
+          // setPendingThreads(); // clear pending threads since we now have a saved thread
+          setActiveThread(currentThread.id);
+        })
+        .catch((err) => {
+          console.error("Failed to create thread", err);
+          // fallback to local pending thread
+          currentThread = {
+            id: crypto.randomUUID(),
+            title: "New Chat",
+            chat_messages: [],
+            buffer: [],
+            createdAt: new Date().toISOString(),
+            saved: false,
+          };
+          setPendingThreads([currentThread!, ...(pendingThreads || [])]);
+          setActiveThread(currentThread!.id);
+        });
+      // const threadId = crypto.randomUUID();
+      // currentThread = {
+      //   id: threadId,
+      //   title: "New Chat",
+      //   chat_messages: [],
+      //   buffer: [],
+      //   createdAt: new Date().toISOString(),
+      //   saved: false,
+      // };
+      // setPendingThreads([currentThread, ...(pendingThreads || [])]);
     }
 
     // 2️⃣ Create user message
@@ -135,12 +167,16 @@ export default function ChatWindow() {
     };
     console.log("currentThread before adding message:", currentThread);
     // 3️⃣ Add message to chat_messages & buffer
-    currentThread.chat_messages.push(userMessage);
-    currentThread.buffer.push(userMessage);
+    currentThread?.chat_messages.push(userMessage);
+    currentThread?.buffer.push(userMessage);
 
     // 4️⃣ Update Zustand
-    if (pendingThread?.id === currentThread.id) {
-      setPendingThread(currentThread);
+    if (pendingThreads?.some((t) => t.id === currentThread?.id)) {
+      setPendingThreads(
+        pendingThreads.map((t) =>
+          t.id === currentThread?.id ? { ...currentThread } : t,
+        ),
+      );
     } else {
       setThreads(
         threads.map((t) => (t.id === currentThread!.id ? currentThread! : t)),
@@ -149,11 +185,15 @@ export default function ChatWindow() {
 
     setInput("");
 
-    if (pendingThread?.id === currentThread.id) {
-      setPendingThread(currentThread);
+    if (pendingThreads?.some((t) => t.id === currentThread?.id)) {
+      setPendingThreads(
+        pendingThreads.map((t) =>
+          t.id === currentThread?.id ? { ...currentThread } : t,
+        ),
+      );
     } else {
       setThreads(
-        threads.map((t) => (t.id === currentThread!.id ? currentThread! : t)),
+        threads.map((t) => (t.id === currentThread?.id ? currentThread : t)),
       );
     }
 
@@ -167,17 +207,21 @@ export default function ChatWindow() {
         timestamp: new Date().toISOString(),
       };
 
-      currentThread.chat_messages.push(aiMessage);
-      currentThread.buffer.push(aiMessage);
+      currentThread?.chat_messages.push(aiMessage);
+      currentThread?.buffer.push(aiMessage);
       localStorage.setItem(
-        `messageBuffer_${currentThread.id}`,
-        JSON.stringify(currentThread.buffer),
+        `messageBuffer ${currentThread?.id}`,
+        JSON.stringify(currentThread?.buffer),
       );
-      if (pendingThread?.id === currentThread.id) {
-        setPendingThread(currentThread);
+      if (pendingThreads?.some((t) => t.id === currentThread?.id)) {
+        setPendingThreads(
+          pendingThreads.map((t) =>
+            t.id === currentThread?.id ? { ...currentThread } : t,
+          ),
+        );
       } else {
         setThreads(
-          threads.map((t) => (t.id === currentThread!.id ? currentThread! : t)),
+          threads.map((t) => (t.id === currentThread?.id ? currentThread : t)),
         );
       }
     } catch (err) {
@@ -185,12 +229,14 @@ export default function ChatWindow() {
     }
 
     // 7️⃣ Optional: flush buffer if >= 5 messages
-    if (currentThread.buffer.length >= 5) {
-      flushMessagesToDB(currentThread.id);
+    if (currentThread && currentThread?.buffer.length >= 5) {
+      flushMessagesToDB(currentThread?.id);
     }
   };
   const flushMessagesToDB = async (threadId: string) => {
-    const thread = threads.find((t) => t.id === threadId) || pendingThread;
+    const thread =
+      threads.find((t) => t.id === threadId) ||
+      pendingThreads?.find((t) => t.id === threadId);
     if (!thread || thread.buffer.length === 0) return;
 
     try {
@@ -203,9 +249,14 @@ export default function ChatWindow() {
       // Clear buffer after flush
       thread.buffer = [];
 
-      if (pendingThread?.id === threadId) setPendingThread(thread);
-      else setThreads(threads.map((t) => (t.id === threadId ? thread : t)));
-      localStorage.removeItem(`messageBuffer_${threadId}`);
+      if (pendingThreads?.some((t) => t.id === threadId)) {
+        setPendingThreads(
+          pendingThreads.map((t) => (t.id === threadId ? { ...thread } : t)),
+        );
+      } else {
+        setThreads(threads.map((t) => (t.id === threadId ? { ...thread } : t)));
+      }
+      localStorage.removeItem(`messageBuffer ${threadId}`);
     } catch (err) {
       console.error("Failed to flush messages", err);
     }

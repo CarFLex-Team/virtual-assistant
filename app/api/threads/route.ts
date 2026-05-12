@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     .from("chat_threads")
     .insert({
       title,
-      id: id || null,
+      id: id || crypto.randomUUID(),
     })
     .select();
 
@@ -17,6 +17,7 @@ export async function POST(req: Request) {
     console.error("Error creating thread:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+  console.log("Thread created:", data);
   return NextResponse.json(data);
 }
 

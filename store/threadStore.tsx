@@ -32,8 +32,8 @@ interface ThreadState {
   activeThread: string | null;
   setActiveThread: (id: string | null) => void;
 
-  pendingThread: Thread | null;
-  setPendingThread: (thread: Thread | null) => void;
+  pendingThreads: Thread[] | null;
+  setPendingThreads: (threads: Thread[] | null) => void;
 
   messageBuffer: ChatMessage[];
   addToBuffer: (msg: ChatMessage) => void;
@@ -48,8 +48,8 @@ export const useThreadStore = create<ThreadState>((set, get) => ({
   activeThread: null,
   setActiveThread: (id) => set({ activeThread: id }),
 
-  pendingThread: null,
-  setPendingThread: (thread) => set({ pendingThread: thread }),
+  pendingThreads: null,
+  setPendingThreads: (threads) => set({ pendingThreads: threads }),
 
   messageBuffer: [],
   addToBuffer: (msg) => {

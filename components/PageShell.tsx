@@ -21,6 +21,7 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
     };
     loadThreads();
   }, [setThreads]);
+
   return (
     <div className="flex h-screen">
       <Sidebar
