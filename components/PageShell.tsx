@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Sidebar from "./Nav/Sidebar";
 import { useThreadStore } from "@/store/threadStore";
 import TopNav from "./Nav/TopNav";
@@ -24,13 +24,15 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen">
-      <Sidebar
-        open={sidebarOpen}
-        setOpen={setSidebarOpen}
-        threadsLoaded={threadsLoaded}
-        // activeThread={activeThread}
-        // setActiveThread={setActiveThread}
-      />
+      <Suspense fallback={<div>Loading...</div>}>
+        <Sidebar
+          open={sidebarOpen}
+          setOpen={setSidebarOpen}
+          threadsLoaded={threadsLoaded}
+          // activeThread={activeThread}
+          // setActiveThread={setActiveThread}
+        />
+      </Suspense>
       <div className="flex flex-col flex-1">
         <TopNav onMenuClick={() => setSidebarOpen(true)} />
         <div className=" flex-1 overflow-auto">
