@@ -309,7 +309,7 @@ export default function ChatWindow() {
       {displayedMessages.length <= 0 && <StarBackground />}
       <div className="flex flex-col gap-4 h-full p-4 rounded-lg ">
         {showWelcome && (
-          <div className="h-full flex flex-col items-center justify-center gap-6 ">
+          <div className="h-full flex flex-col items-center justify-center gap-6 z-5">
             <div className="p-6 rounded-2xl bg-linear-to-b from-white to-sky-100 px-4s shadow-lg flex flex-col items-center gap-4 max-w-xs">
               <img
                 src="/chat-bot2.png"

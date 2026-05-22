@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   PanelLeftClose,
@@ -7,6 +7,8 @@ import {
   MessageSquare,
   ChartColumnDecreasing,
   Trash,
+  EllipsisVertical,
+  Pen,
 } from "lucide-react";
 import NavButton from "../ui/NavButton";
 import { useThreadStore } from "@/store/threadStore";
@@ -34,7 +36,29 @@ export default function Sidebar({
   } = useThreadStore();
 
   const [activeNav, setActiveNav] = useState<string | null>(null);
-  console.log("Sidebar render", { threads, pendingThreads });
+  const [editingThreadId, setEditingThreadId] = useState<string | null>(null);
+  const [ellipsisOpenThreadId, setEllipsisOpenThreadId] = useState<
+    string | null
+  >(null);
+  const [tempTitle, setTempTitle] = useState("");
+  const ellipsisRef = useRef<HTMLDivElement>(null);
+  // console.log("Sidebar render", { threads, pendingThreads });
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        ellipsisRef.current &&
+        !ellipsisRef.current.contains(event.target as Node)
+      ) {
+        setEllipsisOpenThreadId(null); // close menu
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [ellipsisRef]);
   const navItems = [
     {
       id: "NewChat",
@@ -103,6 +127,21 @@ export default function Sidebar({
     setActiveThread(id);
     router.push(`/?threadId=${id}`);
   };
+  const handleThreadEdit = (id: string, e: any, title: string) => {
+    e.stopPropagation();
+    fetch(`/api/threads/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ title }),
+    }).then((res) => {
+      if (res.ok) {
+        setThreads(threads.map((t) => (t.id === id ? { ...t, title } : t)));
+      }
+    });
+  };
+
   const handleThreadDelete = (id: string, e: any) => {
     e.stopPropagation(); // prevent triggering thread select
     fetch(`/api/threads/${id}`, {
@@ -149,7 +188,9 @@ export default function Sidebar({
               key={item.href}
               onClick={() => {
                 setActiveNav(item.label);
-                // setActiveThread(null); // deselect any thread when navigating
+                if (item.label === "Statistics") {
+                  setActiveThread(null); // deselect any thread when navigating
+                }
                 item.onClick && item.onClick();
               }}
               item={item}
@@ -166,8 +207,8 @@ export default function Sidebar({
           ))}
 
           {/* Threads */}
-          {open && activeNav !== "Statistics" && (
-            <div className="mt-6 overflow-auto">
+          {open && (
+            <div className="mt-6 overflow-y-visible ">
               <p className={`text-gray-400 ${open ? "px-4 py-1" : ""}`}>
                 Recent Chats
               </p>
@@ -179,29 +220,81 @@ export default function Sidebar({
                       setActiveThreadAndUrl(t.id);
                       setActiveNav(null);
                     }}
-                    className={`cursor-pointer p-2 my-1 rounded flex justify-between items-center ${
+                    className={`cursor-pointer p-2 my-1 rounded flex justify-between items-center relative ${
                       t.id === activeThread
                         ? "bg-blue-100"
                         : "text-white hover:bg-gray-100 hover:text-gray-900"
                     }`}
                   >
-                    <p>
-                      {t.chat_messages[0]?.content
-                        .split(" ")
-                        .slice(0, 2)
-                        .join(" ") ||
-                        t.buffer[0]?.content.split(" ").slice(0, 2).join(" ") ||
-                        t.title ||
-                        "New Chat"}
-                    </p>
+                    {editingThreadId === t.id ? (
+                      <input
+                        type="text"
+                        value={tempTitle}
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => setTempTitle(e.target.value)}
+                        onBlur={(e) => {
+                          handleThreadEdit(t.id, e, tempTitle);
+                          setEditingThreadId(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleThreadEdit(t.id, e, tempTitle);
+                            setEditingThreadId(null);
+                          }
+                        }}
+                        className="w-full rounded border border-gray-300 px-1"
+                      />
+                    ) : (
+                      <p>
+                        {t.title !== "New Chat"
+                          ? t.title
+                          : t.chat_messages[0]?.content
+                              ?.split(" ")
+                              .slice(0, 2)
+                              .join(" ") ||
+                            t.buffer[0]?.content
+                              ?.split(" ")
+                              .slice(0, 2)
+                              .join(" ") ||
+                            "New Chat"}
+                      </p>
+                    )}
                     {t.saved && (
                       <div
                         onClick={(e) => {
-                          handleThreadDelete(t.id, e);
+                          e.stopPropagation();
+                          setEllipsisOpenThreadId(
+                            ellipsisOpenThreadId === t.id ? null : t.id,
+                          );
                         }}
-                        className="p-1 hover:bg-red-300 text-red-500 rounded-lg"
+                        className="p-1 hover:bg-gray-200  rounded-lg"
                       >
-                        <Trash size={18} />
+                        <EllipsisVertical size={18} />
+                      </div>
+                    )}
+                    {ellipsisOpenThreadId === t.id && (
+                      <div
+                        className="absolute right-0 mt-1 bg-background rounded-lg shadow-md z-20 p-1 "
+                        ref={ellipsisRef}
+                      >
+                        <button
+                          className="flex justify-start items-center gap-1 px-5 py-1 hover:bg-gray-500 w-full text-left text-white rounded-lg my-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingThreadId(t.id);
+                            setTempTitle(t.title || "");
+                            setEllipsisOpenThreadId(null);
+                          }}
+                        >
+                          <Pen size={16} /> Rename
+                        </button>
+                        <button
+                          className="flex justify-start items-center gap-1 px-5 py-1 hover:bg-red-200 w-full  text-red-500 rounded-lg my-1"
+                          onClick={(e) => handleThreadDelete(t.id, e)}
+                        >
+                          <Trash size={16} /> Delete
+                        </button>
                       </div>
                     )}
                   </div>

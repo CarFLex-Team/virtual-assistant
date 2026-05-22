@@ -20,7 +20,7 @@ export default function StarBackground() {
         },
         particles: {
           number: {
-            value: 200,
+            value: 250,
             density: {
               enable: true,
               value_area: 2995.805871779508,
@@ -66,16 +66,16 @@ export default function StarBackground() {
           },
           line_linked: {
             enable: false,
-            distance: 500,
+            distance: 128,
             color: "#ffffff",
             opacity: 0.4,
-            width: 2,
+            width: 1,
           },
           move: {
             enable: true,
             speed: 1,
-            direction: "top",
-            random: false,
+            direction: "none",
+            random: true,
             straight: false,
             out_mode: "out",
             bounce: false,

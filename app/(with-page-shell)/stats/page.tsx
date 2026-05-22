@@ -78,7 +78,7 @@ export default function Statistics() {
 
   return (
     <div className="p-4  ">
-      <div className="p-7 rounded-2xl shadow-lg bg-sky-100 flex flex-col gap-8 min-h-screen">
+      <div className="p-7 rounded-2xl shadow-lg flex flex-col gap-8 min-h-screen">
         {/* Sales Line Chart */}
         <div className="bg-white rounded-2xl shadow-xl p-6">
           <h2 className="text-2xl font-bold mb-4 text-gray-700">
