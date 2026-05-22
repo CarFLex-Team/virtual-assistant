@@ -4,12 +4,12 @@ import { db } from "@/lib/db";
 
 export async function POST(req: Request) {
   const { title, id } = await req.json();
-
+  const threadId = id ?? crypto.randomUUID();
   const { data, error } = await db
     .from("chat_threads")
     .insert({
       title,
-      id: id || crypto.randomUUID(),
+      id: threadId,
     })
     .select();
 
