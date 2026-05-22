@@ -10,6 +10,7 @@ import Clarification from "./Clarification";
 import ErrorBubble from "./ErrorBubble";
 import { fetchAIResponse } from "@/utils/api";
 import { useThreadStore, Thread, ChatMessage } from "@/store/threadStore";
+import StarBackground from "./StarBackground";
 
 export default function ChatWindow() {
   const {
@@ -304,8 +305,9 @@ export default function ChatWindow() {
   const showWelcome = currentThread && currentThread.chat_messages.length === 0;
 
   return (
-    <div className="h-[95vh] p-4 ">
-      <div className="flex flex-col gap-4 h-full bg-[url('/bg-chat.jpg')] bg-cover bg-center p-4 rounded-lg shadow-lg ">
+    <div className="h-[95vh] p-4 bg-transparent">
+      {displayedMessages.length <= 0 && <StarBackground />}
+      <div className="flex flex-col gap-4 h-full p-4 rounded-lg ">
         {showWelcome && (
           <div className="h-full flex flex-col items-center justify-center gap-6 ">
             <div className="p-6 rounded-2xl bg-linear-to-b from-white to-sky-100 px-4s shadow-lg flex flex-col items-center gap-4 max-w-xs">
@@ -323,7 +325,7 @@ export default function ChatWindow() {
                 instantly.
               </p>
             </div>
-            <p className="text-gray-600 text-sm italic">
+            <p className="text-gray-400 text-sm italic">
               Tip: Try typing a question like "Show me sales for last week"
             </p>
           </div>
@@ -344,7 +346,7 @@ export default function ChatWindow() {
         <div className="flex gap-2">
           <input
             type="text"
-            className="flex-1 border border-sky-900 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-950"
+            className="flex-1 border border-sky-900 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-950 text-white "
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
