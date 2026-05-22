@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 
 export async function DELETE(
   req: Request,
-  context: { params: { threadId: string } },
+  context: { params: Promise<{ threadId: string }> },
 ) {
   const { threadId } = await context.params;
   try {
@@ -23,7 +23,7 @@ export async function DELETE(
 
 export async function PATCH(
   req: Request,
-  context: { params: { threadId: string } },
+  context: { params: Promise<{ threadId: string }> },
 ) {
   const { threadId } = await context.params;
 

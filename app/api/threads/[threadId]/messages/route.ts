@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 
 export async function POST(
   req: Request,
-  context: { params: { threadId: string } },
+  context: { params: Promise<{ threadId: string }> },
 ) {
   const { threadId } = await context.params;
   const { messages, title } = await req.json();
