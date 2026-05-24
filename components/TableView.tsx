@@ -29,15 +29,20 @@ export default function TableView({ data }: TableViewProps) {
           </tr>
         </thead>
         <tbody>
-          {data.rows.map((row, idx) => (
-            <tr key={idx} className="border-t hover:bg-gray-50">
-              {tempColumns.map((col) => (
-                <td key={col} className="px-4 py-2 text-gray-800">
-                  {row[col] !== undefined ? row[col] : row[idx] || "N/A"}
-                </td>
-              ))}
-            </tr>
-          ))}
+          {data.rows.map((row, idx) => {
+            console.log(row);
+            return (
+              <tr key={idx} className="border-t hover:bg-gray-50">
+                {tempColumns.map((col) => (
+                  <td key={col} className="px-4 py-2 text-gray-800">
+                    {row[tempColumns.indexOf(col)] !== undefined
+                      ? row[tempColumns.indexOf(col)]
+                      : row[col] || "N/A"}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
