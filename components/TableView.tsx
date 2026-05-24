@@ -17,7 +17,7 @@ const tempColumns = [
 ];
 export default function TableView({ data }: TableViewProps) {
   return (
-    <div className="overflow-hidden bg-white p-4 rounded-xl shadow-lg border border-gray-200">
+    <div className="overflow-auto bg-white p-4 rounded-xl shadow-lg border w-[70vw] border-gray-200">
       <table className="w-full text-left table-auto">
         <thead className="bg-gray-100">
           <tr>
