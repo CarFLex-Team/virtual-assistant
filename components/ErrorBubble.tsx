@@ -3,7 +3,7 @@ interface ErrorBubbleProps {
 }
 
 export default function ErrorBubble({ content }: ErrorBubbleProps) {
-  console.error("AI Error:", content);
+  console.log("AI Error:", content);
   return (
     <div className="bg-red-100 text-red-700 p-3 rounded-lg shadow-sm border border-red-300 w-full">
       {content.code && <p className="font-bold">{content.code}</p>}

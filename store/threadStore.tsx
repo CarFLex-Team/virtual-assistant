@@ -3,6 +3,7 @@ import { create } from "zustand";
 
 export type ChatMessage = {
   id: number;
+  summary?: string;
   type:
     | "user"
     | "bot"
@@ -11,7 +12,8 @@ export type ChatMessage = {
     | "table"
     | "ranking"
     | "distribution"
-    | "clarification";
+    | "clarification"
+    | "time_series";
   content: any;
   timestamp: string;
 };

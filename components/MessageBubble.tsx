@@ -5,12 +5,13 @@ interface MessageProps {
     type:
       | "user"
       | "bot"
+      | "error"
       | "chart"
       | "table"
       | "ranking"
       | "distribution"
       | "clarification"
-      | "error";
+      | "time_series";
   };
 }
 

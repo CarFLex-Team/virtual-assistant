@@ -78,13 +78,14 @@ export default function Statistics() {
 
   return (
     <div className="p-4  ">
-      <div className="p-7 rounded-2xl shadow-lg flex flex-col gap-8 min-h-screen">
+      <div className="p-7 rounded-2xl shadow-lg grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 min-h-screen">
         {/* Sales Line Chart */}
         <div className="bg-white rounded-2xl shadow-xl p-6">
           <h2 className="text-2xl font-bold mb-4 text-gray-700">
             Sales Over Time
           </h2>
-          <ResponsiveContainer width="100%" height={300}>
+
+          <ResponsiveContainer width="100%" height={150}>
             <LineChart data={salesData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="date" stroke="#6b7280" />
@@ -107,7 +108,7 @@ export default function Statistics() {
           <h2 className="text-2xl font-bold mb-4 text-gray-700">
             Inventory by Category
           </h2>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={150}>
             <BarChart data={inventoryData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="category" stroke="#6b7280" />
@@ -125,7 +126,7 @@ export default function Statistics() {
           <h2 className="text-2xl font-bold mb-4 text-gray-700">
             Customer Growth
           </h2>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={150}>
             <AreaChart data={customersData}>
               <defs>
                 <linearGradient id="colorCust" x1="0" y1="0" x2="0" y2="1">
@@ -155,7 +156,7 @@ export default function Statistics() {
           <h2 className="text-2xl font-bold mb-4 text-gray-700">
             Revenue Sources
           </h2>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={150}>
             <PieChart>
               <Tooltip
                 contentStyle={{ backgroundColor: "#f3f4f6", borderRadius: 8 }}
@@ -167,7 +168,7 @@ export default function Statistics() {
                 nameKey="source"
                 cx="50%"
                 cy="50%"
-                outerRadius={100}
+                outerRadius={50}
                 fill="#3b82f6"
                 label
               >
@@ -187,7 +188,7 @@ export default function Statistics() {
           <h2 className="text-2xl font-bold mb-4 text-gray-700">
             Orders Over Time
           </h2>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={150}>
             <LineChart data={ordersData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="date" stroke="#6b7280" />

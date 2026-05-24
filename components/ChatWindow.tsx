@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp } from "lucide-react";
+import { ArrowUp, Square } from "lucide-react";
 import Message from "./MessageBubble";
 import StatsChart from "./StatsChart";
 import TableView from "./TableView";
@@ -32,6 +32,8 @@ export default function ChatWindow() {
   //   threads,
   // );
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const controllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -107,7 +109,7 @@ export default function ChatWindow() {
 
   const sendMessage = async (content: string) => {
     if (!content.trim()) return;
-
+    controllerRef.current = new AbortController();
     let currentThread = getCurrentThread();
 
     // 1️⃣ Lazy create thread if none exists
@@ -200,13 +202,32 @@ export default function ChatWindow() {
 
     // 6️⃣ Fetch AI response
     try {
-      const aiData = await fetchAIResponse(content);
-      const aiMessage: ChatMessage = {
-        id: Date.now() + 2,
-        type: aiData.type,
-        content: aiData.data,
-        timestamp: new Date().toISOString(),
-      };
+      setLoading(true);
+      const aiData = await fetchAIResponse(content, {
+        signal: controllerRef.current?.signal,
+      });
+      let aiMessage: ChatMessage;
+      if (!aiData || aiData.status === "error") {
+        aiMessage = {
+          id: Date.now() + 1,
+          type: "error",
+          content: {
+            code: aiData?.error?.code || "Unknown Error",
+            message:
+              aiData?.error?.message ||
+              "An error occurred while processing your request.",
+          },
+          timestamp: new Date().toISOString(),
+        };
+      } else {
+        aiMessage = {
+          id: Date.now() + 2,
+          summary: aiData.summary,
+          type: aiData.data.type,
+          content: aiData.data,
+          timestamp: new Date().toISOString(),
+        };
+      }
 
       currentThread?.chat_messages.push(aiMessage);
       currentThread?.buffer.push(aiMessage);
@@ -226,9 +247,20 @@ export default function ChatWindow() {
         );
       }
     } catch (err) {
-      // handle error similarly
+      console.error("Failed to fetch AI response", err);
+      const errorMessage: ChatMessage = {
+        id: Date.now() + 3,
+        type: "error",
+        content: {
+          code: "AI_FETCH_ERROR",
+          message: "Failed to fetch AI response",
+        },
+        timestamp: new Date().toISOString(),
+      };
+      currentThread?.chat_messages.push(errorMessage);
+      currentThread?.buffer.push(errorMessage);
     }
-
+    setLoading(false);
     // 7️⃣ Optional: flush buffer if >= 5 messages
     if (currentThread && currentThread?.buffer.length >= 5) {
       flushMessagesToDB(currentThread?.id);
@@ -263,6 +295,10 @@ export default function ChatWindow() {
     }
   };
   const handleSend = () => {
+    if (loading) {
+      controllerRef.current?.abort();
+      setLoading(false);
+    }
     if (!input.trim()) return;
     sendMessage(input);
   };
@@ -283,8 +319,8 @@ export default function ChatWindow() {
       case "user":
       case "bot":
         return <SafeMessage message={msg} />;
-      case "chart":
-        return <StatsChart data={msg.content} />;
+      case "time_series":
+        return <StatsChart apiData={msg.content} />;
       case "table":
         return <TableView data={msg.content} />;
       case "ranking":
@@ -307,14 +343,14 @@ export default function ChatWindow() {
   return (
     <div className="h-[95vh] p-4 bg-transparent">
       {displayedMessages.length <= 0 && <StarBackground />}
-      <div className="flex flex-col gap-4 h-full p-4 rounded-lg ">
+      <div className="flex flex-col gap-2 md:gap-4 h-full p-4 rounded-lg ">
         {showWelcome && (
           <div className="h-full flex flex-col items-center justify-center gap-6 z-5">
             <div className="p-6 rounded-2xl bg-linear-to-b from-white to-sky-100 px-4s shadow-lg flex flex-col items-center gap-4 max-w-xs">
               <img
                 src="/chat-bot2.png"
                 alt="Chat Bot"
-                className="w-32 h-32 object-contain"
+                className="md:w-32 md:h-32 w-24 h-24 object-contain"
               />
               <p className="text-center text-gray-700 text-lg font-semibold">
                 Hi, I'm <span className="text-primary-600">ELIARA</span>, your
@@ -340,6 +376,11 @@ export default function ChatWindow() {
               {renderMessage(msg)}
             </div>
           ))}
+          {loading && (
+            <div className="flex justify-start">
+              <div className="animate-pulse max-w-2xl px-4 py-2 rounded-xl wrap-break-word  bg-white text-gray-800  rounded-bl-none h-6" />
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
 
@@ -353,10 +394,10 @@ export default function ChatWindow() {
             placeholder="Type a message..."
           />
           <button
-            className="bg-sky-900 hover:bg-sky-800 text-white font-semibold p-2 rounded-xl transition-colors duration-200 cursor-pointer"
+            className="bg-sky-900 hover:bg-sky-800 text-white font-semibold p-2 rounded-xl transition-colors duration-200 cursor-pointer "
             onClick={handleSend}
           >
-            <ArrowUp />
+            {loading ? <Square /> : <ArrowUp />}
           </button>
         </div>
       </div>

@@ -22,6 +22,7 @@
 //     );
 //   }
 // }
+//cutomers bought per day (type:time_series)
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
     } else if (question.toLowerCase().includes("per day")) {
       mockResponse = {
         status: "success",
-        type: "chart",
+        type: "time_series",
         data: {
           labels: ["Jan 8", "Jan 9", "Jan 10", "Jan 11"],
           datasets: [
