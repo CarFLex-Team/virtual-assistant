@@ -209,7 +209,13 @@ export default function Sidebar({
               }
             >
               <item.icon size={20} strokeWidth={3} />
-              {open && <span className="text-white">{item.label}</span>}
+              {open && (
+                <span
+                  className={` ${activeNav === item.label ? "text-white" : "text-sky-100"}`}
+                >
+                  {item.label}
+                </span>
+              )}
             </NavButton>
           ))}
 

@@ -14,9 +14,9 @@ export default function NavButton(props: NavButtonProps) {
   return (
     <Link
       href={`${item.href}`}
-      className={`flex gap-2 items-center text-left w-full  font-medium text-sm transition-colors text-gray-300 hover:bg-gray-600 ${className} ${
+      className={`flex gap-2 items-center text-left w-full  font-medium text-sm transition-colors text-sky-100 hover:bg-gray-600 ${className} ${
         isActive
-          ? "text-primary-600 bg-gray-500 shadow-[0_0px_6px_rgba(0,0,0,0.5)]  "
+          ? " bg-primary-600 shadow-[0_0px_6px_rgba(0,0,0,0.5)]  text-white "
           : //+ colorMap[item.label]
             ""
       }`}

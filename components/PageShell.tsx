@@ -35,7 +35,7 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
       </Suspense>
       <div className="flex flex-col flex-1">
         <TopNav onMenuClick={() => setSidebarOpen(true)} />
-        <div className=" flex-1 overflow-auto">
+        <div className=" flex-1 overflow-auto scrollbar-thin scrollbar-thumb-sky-800 scrollbar-track-sky-500">
           <main className="flex-1  bg-background ">{children}</main>
         </div>
       </div>
