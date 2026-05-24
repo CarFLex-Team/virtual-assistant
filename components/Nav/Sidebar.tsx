@@ -9,6 +9,7 @@ import {
   Trash,
   EllipsisVertical,
   Pen,
+  LayoutDashboard,
 } from "lucide-react";
 import NavButton from "../ui/NavButton";
 import { useThreadStore } from "@/store/threadStore";
@@ -61,9 +62,15 @@ export default function Sidebar({
   }, [ellipsisRef]);
   const navItems = [
     {
+      id: "Dashboard",
+      label: "Dashboard",
+      href: "/",
+      icon: LayoutDashboard,
+    },
+    {
       id: "NewChat",
       label: "New Chat",
-      href: "/",
+      href: "/chat",
       icon: MessageSquare,
       onClick: () => {
         startNewChat();
@@ -90,9 +97,9 @@ export default function Sidebar({
     setActiveNav(current?.label || null);
   }, []);
   useEffect(() => {
-    // If we are on "/" and no active thread exists, create a pending thread
+    // If we are on "/chat" and no active thread exists, create a pending thread
     if (
-      window.location.pathname === "/" &&
+      window.location.pathname === "/chat" &&
       !activeThread &&
       pendingThreads === null
     ) {
@@ -125,7 +132,7 @@ export default function Sidebar({
 
   const setActiveThreadAndUrl = (id: string) => {
     setActiveThread(id);
-    router.push(`/?threadId=${id}`);
+    router.push(`chat/?threadId=${id}`);
   };
   const handleThreadEdit = (id: string, e: any, title: string) => {
     e.stopPropagation();
@@ -188,7 +195,7 @@ export default function Sidebar({
               key={item.href}
               onClick={() => {
                 setActiveNav(item.label);
-                if (item.label === "Statistics") {
+                if (item.label === "Statistics" || item.label === "Dashboard") {
                   setActiveThread(null); // deselect any thread when navigating
                 }
                 item.onClick && item.onClick();
