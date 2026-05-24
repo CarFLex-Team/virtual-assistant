@@ -21,11 +21,9 @@ interface StatsChartProps {
 
 export default function StatsChart({ apiData }: StatsChartProps) {
   // Convert API response into Recharts format
+  console.log(apiData);
   const chartData = apiData.series.map((item) => ({
-    name: new Date(item.date).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    }),
+    name: item.date, // You can format this date as needed
     value: item.value,
     fullDate: item.date,
   }));
