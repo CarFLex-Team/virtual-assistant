@@ -222,9 +222,9 @@ export default function ChatWindow() {
       } else {
         aiMessage = {
           id: Date.now() + 2,
-          summary: aiData.summary,
-          type: aiData.data.type,
-          content: aiData.data,
+          // summary: aiData.summary,
+          type: "bot",
+          content: aiData?.answer,
           timestamp: new Date().toISOString(),
         };
       }
