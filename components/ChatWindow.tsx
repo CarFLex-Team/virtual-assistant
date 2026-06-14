@@ -320,16 +320,16 @@ export default function ChatWindow() {
       case "user":
       case "bot":
         return <SafeMessage message={msg} />;
-      case "time_series":
-        return <StatsChart apiData={msg.visual} />;
-      case "table":
-        return <TableView data={msg.visual} />;
-      case "ranking":
-        return <RankingView data={msg.visual} />;
-      case "distribution":
-        return <DistributionView data={msg.visual} />;
-      case "clarification":
-        return <Clarification data={msg.visual} onSelect={() => {}} />;
+      // case "time_series":
+      //   return <StatsChart apiData={msg.visual} />;
+      // case "table":
+      //   return <TableView data={msg.visual} />;
+      // case "ranking":
+      //   return <RankingView data={msg.visual} />;
+      // case "distribution":
+      //   return <DistributionView data={msg.visual} />;
+      // case "clarification":
+      //   return <Clarification data={msg.visual} onSelect={() => {}} />;
       case "error":
         return <ErrorBubble content={msg.content} />;
       default:

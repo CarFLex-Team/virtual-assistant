@@ -4,16 +4,7 @@ import { create } from "zustand";
 export type ChatMessage = {
   id: number;
   summary?: string;
-  type:
-    | "user"
-    | "bot"
-    | "error"
-    | "chart"
-    | "table"
-    | "ranking"
-    | "distribution"
-    | "clarification"
-    | "time_series";
+  type: "user" | "bot" | "error";
   content: any;
   visual?: any; // for charts/tables
   timestamp: string;
