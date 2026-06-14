@@ -8,7 +8,6 @@ import { ResetFormData, resetSchema } from "@/lib/validations/resetSchema";
 import { requestPasswordReset } from "@/lib/auth/auth-client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-// import AnimatedLogo from "@/components/AnimatedLogo";
 
 export default function ForgotPasswordPage() {
   const [authError, setAuthError] = useState<string | null>(null);
@@ -77,7 +76,6 @@ export default function ForgotPasswordPage() {
             />
           </div>
 
-          {/* Auth error */}
           {authError && <p className="text-sm text-red-400">{authError}</p>}
           <AuthButton
             // type="submit"

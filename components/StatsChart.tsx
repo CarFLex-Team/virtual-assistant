@@ -20,10 +20,9 @@ interface StatsChartProps {
 }
 
 export default function StatsChart({ apiData }: StatsChartProps) {
-  // Convert API response into Recharts format
   console.log(apiData);
   const chartData = apiData.points.map((item) => ({
-    name: item.label, // You can format this label as needed
+    name: item.label,
     value: item.value,
     fullDate: item.label,
   }));

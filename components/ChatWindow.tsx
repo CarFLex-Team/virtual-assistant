@@ -52,39 +52,33 @@ export default function ChatWindow() {
   useEffect(() => {
     if (!activeThread) return;
 
-    // Get current thread from store
     let currentThread =
       threads.find((t) => t.id === activeThread) ||
       pendingThreads?.find((t) => t.id === activeThread) ||
       null;
 
     if (!currentThread) {
-      // create pending thread if none exists
       currentThread = pendingThreads?.[0] || threads[0] || null;
       setActiveThread(currentThread?.id || null);
     }
 
-    // Load buffer from localStorage
     const savedBuffer = localStorage.getItem(`messageBuffer ${activeThread}`);
     if (!savedBuffer) return;
 
     const bufferedMessages: ChatMessage[] = JSON.parse(savedBuffer);
     if (bufferedMessages.length === 0) return;
 
-    // Filter out messages already in chat_messages
     const existingIds = new Set(currentThread.chat_messages.map((m) => m.id));
     const newMessages = bufferedMessages.filter((m) => !existingIds.has(m.id));
 
-    if (newMessages.length === 0) return; // <-- prevent unnecessary state updates
+    if (newMessages.length === 0) return;
 
-    // Merge new messages
     currentThread.chat_messages = [
       ...currentThread.chat_messages,
       ...newMessages,
     ];
     currentThread.buffer = bufferedMessages;
 
-    // Update Zustand only if state actually changed
     if (pendingThreads?.some((t) => t.id === activeThread)) {
       setPendingThreads(
         pendingThreads.map((t) =>
@@ -111,7 +105,6 @@ export default function ChatWindow() {
         body: JSON.stringify({ messages: thread.buffer }),
       });
 
-      // Clear buffer after flush
       thread.buffer = [];
 
       if (pendingThreads?.some((t) => t.id === threadId)) {
@@ -139,7 +132,6 @@ export default function ChatWindow() {
     controllerRef.current = new AbortController();
     let currentThread = getCurrentThread();
 
-    // 1️⃣ Lazy create thread if none exists
     if (!currentThread || !currentThread.saved) {
       await fetch("/api/threads", {
         method: "POST",
@@ -161,13 +153,10 @@ export default function ChatWindow() {
             saved: true,
           };
           console.log("Current thread after creation:", currentThread);
-          // setThreads([currentThread, ...threads]);
-          // setPendingThreads(); // clear pending threads since we now have a saved thread
           setActiveThread(currentThread.id);
         })
         .catch((err) => {
           console.error("Failed to create thread", err);
-          // fallback to local pending thread
           currentThread = {
             id: crypto.randomUUID(),
             title: "New Chat",
@@ -179,19 +168,8 @@ export default function ChatWindow() {
           setPendingThreads([currentThread!, ...(pendingThreads || [])]);
           setActiveThread(currentThread!.id);
         });
-      // const threadId = crypto.randomUUID();
-      // currentThread = {
-      //   id: threadId,
-      //   title: "New Chat",
-      //   chat_messages: [],
-      //   buffer: [],
-      //   createdAt: new Date().toISOString(),
-      //   saved: false,
-      // };
-      // setPendingThreads([currentThread, ...(pendingThreads || [])]);
     }
 
-    // 2️⃣ Create user message
     const userMessage: ChatMessage = {
       id: Date.now(),
       type: "user",
@@ -199,11 +177,10 @@ export default function ChatWindow() {
       timestamp: new Date().toISOString(),
     };
     console.log("currentThread before adding message:", currentThread);
-    // 3️⃣ Add message to chat_messages & buffer
+
     currentThread?.chat_messages.push(userMessage);
     currentThread?.buffer.push(userMessage);
 
-    // 4️⃣ Update Zustand
     if (pendingThreads?.some((t) => t.id === currentThread?.id)) {
       setPendingThreads(
         pendingThreads.map((t) =>
@@ -230,7 +207,6 @@ export default function ChatWindow() {
       );
     }
 
-    // 6️⃣ Fetch AI response
     try {
       setLoading(true);
       const aiData = await fetchAIResponse(content, {
@@ -292,7 +268,7 @@ export default function ChatWindow() {
       currentThread?.buffer.push(errorMessage);
     }
     setLoading(false);
-    // 7️⃣ Optional: flush buffer if >= 5 messages
+
     if (currentThread && currentThread?.buffer.length >= 5) {
       flushMessagesToDB(currentThread?.id);
     }

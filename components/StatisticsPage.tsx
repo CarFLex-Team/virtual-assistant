@@ -25,7 +25,7 @@ import {
   ShoppingCart,
   Clock,
 } from "lucide-react";
-
+// Sample data for charts and tables (to be replaced with real API data from Mosap)
 // Sales Over Time Data
 const salesData = [
   { date: "2026-04-15", value: 120 },

@@ -51,7 +51,7 @@ export default function Sidebar({
         ellipsisRef.current &&
         !ellipsisRef.current.contains(event.target as Node)
       ) {
-        setEllipsisOpenThreadId(null); // close menu
+        setEllipsisOpenThreadId(null);
       }
     };
 
@@ -85,20 +85,17 @@ export default function Sidebar({
     },
   ];
 
-  // Sync URL param with active thread
   useEffect(() => {
     if (threadIdFromUrl && threadIdFromUrl !== activeThread) {
       setActiveThread(threadIdFromUrl);
     }
   }, [threadIdFromUrl, threadsLoaded]);
 
-  // Highlight nav based on current page
   useEffect(() => {
     const current = navItems.find((i) => i.href === window.location.pathname);
     setActiveNav(current?.label || null);
   }, []);
   useEffect(() => {
-    // If we are on "/chat" and no active thread exists, create a pending thread
     if (
       window.location.pathname === "/chat" &&
       !activeThread &&
@@ -107,7 +104,7 @@ export default function Sidebar({
       const newThread = {
         id: crypto.randomUUID(),
         title: "New Chat",
-        chat_messages: [], // empty so welcome shows
+        chat_messages: [],
         createdAt: new Date().toISOString(),
         buffer: [],
       };
@@ -116,19 +113,18 @@ export default function Sidebar({
       setActiveNav("New Chat");
     }
   }, [activeThread, pendingThreads, setActiveThread, setPendingThreads]);
-  // Click "New Chat" in sidebar
+
   const startNewChat = () => {
     const newThread = {
       id: crypto.randomUUID(),
       title: "New Chat",
-      chat_messages: [], // empty to show welcome
+      chat_messages: [],
       createdAt: new Date().toISOString(),
       buffer: [],
     };
     setPendingThreads([newThread, ...(pendingThreads || [])]);
     setActiveThread(newThread.id);
     setActiveNav("New Chat");
-    // no router.push — stay on same page
   };
 
   const setActiveThreadAndUrl = (id: string) => {
@@ -151,12 +147,11 @@ export default function Sidebar({
   };
 
   const handleThreadDelete = (id: string, e: any) => {
-    e.stopPropagation(); // prevent triggering thread select
+    e.stopPropagation();
     fetch(`/api/threads/${id}`, {
       method: "DELETE",
     }).then((res) => {
       if (res.ok) {
-        // Remove the thread from the list
         setThreads(threads.filter((t) => t.id !== id));
         if (activeThread === id) {
           setActiveThread(null);
@@ -197,7 +192,7 @@ export default function Sidebar({
               onClick={() => {
                 setActiveNav(item.label);
                 if (item.label === "Statistics" || item.label === "Dashboard") {
-                  setActiveThread(null); // deselect any thread when navigating
+                  setActiveThread(null);
                 }
                 item.onClick && item.onClick();
               }}

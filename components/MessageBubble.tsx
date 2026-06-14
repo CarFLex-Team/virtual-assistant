@@ -13,7 +13,7 @@ interface MessageProps {
     id: number;
     content: string;
     type: "user" | "bot" | "error";
-    visual?: any; // for charts/tables
+    visual?: any;
     timestamp: string;
   };
 }

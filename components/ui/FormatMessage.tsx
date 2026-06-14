@@ -4,7 +4,6 @@ export default function FormattedMessage({ text }: { text: string }) {
   return (
     <div className="flex flex-col gap-3 text-sm mb-2">
       {lines.map((line, i) => {
-        // Bullet points
         if (line.startsWith("- ")) {
           const content = line.slice(2);
           const [year, ...rest] = content.split(":");
@@ -19,7 +18,6 @@ export default function FormattedMessage({ text }: { text: string }) {
           );
         }
 
-        // Recommendation line
         if (line.startsWith("Recommendation:")) {
           return (
             <p key={i} className="italic border-t border-brand-mid pt-3 mt-1">
@@ -31,7 +29,6 @@ export default function FormattedMessage({ text }: { text: string }) {
           );
         }
 
-        // Summary line (first line)
         return (
           <p key={i} className=" font-medium">
             {line}

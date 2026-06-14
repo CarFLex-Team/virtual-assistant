@@ -7,7 +7,7 @@ import { loadFull } from "tsparticles";
 
 export default function StarBackground() {
   const particlesInit = useCallback(async (engine: Engine) => {
-    await loadFull(engine); // Works correctly with tsparticles v2
+    await loadFull(engine);
   }, []);
 
   return (

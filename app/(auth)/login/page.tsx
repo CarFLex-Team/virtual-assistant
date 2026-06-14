@@ -38,13 +38,6 @@ export default function SignInPage() {
     } else {
       router.push("/");
     }
-
-    // // success
-    // const sessionRes = await fetch("/api/auth/session");
-    // const session = await sessionRes.json();
-
-    // const role = session?.user?.role;
-    // router.push(role === "OWNER" ? "/owner/dashboard" : "/dashboard");
   };
 
   return (
@@ -91,7 +84,6 @@ export default function SignInPage() {
             Forget Password?
           </a>
 
-          {/* Auth error */}
           {authError && <p className="text-sm text-red-400">{authError}</p>}
           <AuthButton
             className="w-full bg-sky-900 text-white py-2 rounded-lg hover:bg-sky-900/80 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"

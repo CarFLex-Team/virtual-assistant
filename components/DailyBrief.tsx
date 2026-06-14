@@ -5,6 +5,7 @@ import {
   TrendingUp,
   X,
 } from "lucide-react";
+//I'm using hardcoded data for now but this will eventually be replaced with real API data from Mosap
 export default function DailyBrief({
   setShowBrief,
 }: {
