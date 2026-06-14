@@ -1,8 +1,17 @@
 // app/api/messages/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-
+import { auth } from "@/lib/auth/auth";
+import { headers } from "next/headers";
 export async function POST(req: Request) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  const user = session?.user.id;
+  console.log("User ID from session:", user);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const { title, id } = await req.json();
   const threadId = id ?? crypto.randomUUID();
   const { data, error } = await db
@@ -10,6 +19,7 @@ export async function POST(req: Request) {
     .insert({
       title,
       id: threadId,
+      user_id: user,
     })
     .select();
 
@@ -22,9 +32,17 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  const user = session?.user.id;
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const { data: threads, error } = await db
     .from("chat_threads")
     .select("*, chat_messages(*)")
+    .eq("user_id", user)
     .order("created_at", { ascending: false });
 
   if (error) {
