@@ -29,7 +29,7 @@ export default function FormInput({
           type={type}
           placeholder={placeholder}
           {...register}
-          className={`h-11 w-full rounded-lg border px-3 bg-brand-dark text-sm outline-none transition
+          className={`h-11 w-full rounded-lg border px-3 bg-brand-dark text-sm outline-none transition text-gray-100
             ${
               error
                 ? "border-brand-red focus:ring-brand-red"
@@ -39,7 +39,7 @@ export default function FormInput({
         />
       </div>
 
-      {error && <p className="text-xs text-brand-red">{error.message}</p>}
+      {error && <p className="text-xs text-red-400">{error.message}</p>}
     </div>
   );
 }

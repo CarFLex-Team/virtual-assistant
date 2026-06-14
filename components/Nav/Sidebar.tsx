@@ -10,10 +10,11 @@ import {
   EllipsisVertical,
   Pen,
   LayoutDashboard,
+  LogOut,
 } from "lucide-react";
 import NavButton from "../ui/NavButton";
 import { useThreadStore } from "@/store/threadStore";
-
+import { authClient } from "@/lib/auth/auth-client";
 export default function Sidebar({
   open,
   setOpen,
@@ -26,7 +27,7 @@ export default function Sidebar({
   const router = useRouter();
   const searchParams = useSearchParams();
   const threadIdFromUrl = searchParams.get("threadId");
-
+  const { data: session } = authClient.useSession();
   const {
     threads,
     setThreads,
@@ -317,6 +318,19 @@ export default function Sidebar({
           )}
         </div>
       </div>
+      {session && (
+        <div
+          onClick={async () => {
+            await authClient.signOut();
+            router.push("/login");
+          }}
+          className={`cursor-pointer p-2 mt-10 rounded flex justify-between items-center ${open ? "px-4 py-3 rounded-lg" : "p-1 mb-2 rounded-md justify-center"} hover:bg-red-100 `}
+        >
+          <span className="text-red-500 flex items-center gap-1">
+            <LogOut /> {open ? "Sign Out" : ""}
+          </span>
+        </div>
+      )}
     </aside>
   );
 }

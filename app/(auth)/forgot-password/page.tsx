@@ -56,8 +56,8 @@ export default function ForgotPasswordPage() {
       </div>
     </div>
   ) : (
-    <div className="flex min-h-screen items-center justify-center bg-brand-dark p-4">
-      <div className="w-full max-w-md rounded-2xl bg-brand-dark p-8 shadow-xl border border-gray-200">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md rounded-2xl bg-background p-8 shadow-xl border border-gray-200">
         {/* <div className="mb-4 flex justify-center">
           <AnimatedLogo size={2} />
         </div> */}
@@ -78,10 +78,10 @@ export default function ForgotPasswordPage() {
           </div>
 
           {/* Auth error */}
-          {authError && <p className="text-sm text-brand-red">{authError}</p>}
+          {authError && <p className="text-sm text-red-400">{authError}</p>}
           <AuthButton
             // type="submit"
-            className="w-full bg-brand-red text-white py-2 rounded-lg hover:bg-brand-red/80 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-sky-900 text-white py-2 rounded-lg hover:bg-sky-900/80 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isSubmitting || loading}
             onClick={handleSubmit(onSubmit)}
           >
