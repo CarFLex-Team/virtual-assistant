@@ -3,7 +3,7 @@ async function createUser() {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Origin: "http://localhost:3000", // ✅
+      Origin: "http://localhost:3000",
     },
     body: JSON.stringify({
       name: "John",
