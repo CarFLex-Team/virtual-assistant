@@ -22,7 +22,7 @@ export default function MessageBubble({ message }: MessageProps) {
   const isUser = message.type === "user";
   const renderMessage = (msg: ChatMessage) => {
     switch (msg.visual?.type?.toLowerCase()) {
-      case "time_series":
+      case "trend":
         return <StatsChart apiData={msg.visual} />;
       case "table":
         return <TableView data={msg.visual} />;

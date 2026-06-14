@@ -9,8 +9,8 @@ import {
 } from "recharts";
 
 interface ApiResponse {
-  series: {
-    date: string;
+  points: {
+    label: string;
     value: number;
   }[];
 }
@@ -22,10 +22,10 @@ interface StatsChartProps {
 export default function StatsChart({ apiData }: StatsChartProps) {
   // Convert API response into Recharts format
   console.log(apiData);
-  const chartData = apiData.series.map((item) => ({
-    name: item.date, // You can format this date as needed
+  const chartData = apiData.points.map((item) => ({
+    name: item.label, // You can format this label as needed
     value: item.value,
-    fullDate: item.date,
+    fullDate: item.label,
   }));
 
   return (
