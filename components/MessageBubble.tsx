@@ -6,6 +6,7 @@ import StatsChart from "./StatsChart";
 import RankingView from "./RankingView";
 import DistributionView from "./DistributionView";
 import Clarification from "./Clarification";
+import FormattedMessage from "./ui/FormatMessage";
 
 interface MessageProps {
   message: {
@@ -39,7 +40,7 @@ export default function MessageBubble({ message }: MessageProps) {
         ${isUser ? "bg-sky-900 text-white  rounded-br-none" : "bg-white text-gray-800  rounded-bl-none"}
         shadow-md`}
     >
-      <ReactMarkdown>{message.content || "No content"}</ReactMarkdown>
+      <FormattedMessage text={message.content || "No content"} />
       {message.visual && renderMessage(message)}
     </div>
   );
