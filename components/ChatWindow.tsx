@@ -368,7 +368,7 @@ export default function ChatWindow() {
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 rounded-lg scrollbar-thin scrollbar-thumb-sky-800 scrollbar-track-sky-500">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 rounded-lg ">
           {displayedMessages.map((msg: ChatMessage) => (
             <div
               key={msg.id}

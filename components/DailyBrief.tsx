@@ -12,9 +12,9 @@ export default function DailyBrief({
 }) {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-sky-50 rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-auto ">
+      <div className="bg-sky-50 shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-auto ">
         {/* Header */}
-        <div className="sticky top-0 bg-linear-to-r from-sky-900 to-sky-900 text-white p-6 rounded-tl-2xl">
+        <div className="sticky top-0 bg-linear-to-r from-sky-900 to-sky-900 text-white p-6 ">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm opacity-90 mb-1">

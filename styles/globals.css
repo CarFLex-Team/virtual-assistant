@@ -10,17 +10,26 @@
   --color-primary-400: #d09870;
   --color-background: #24252d;
 }
-
-/* globals.css */
-.scrollbar-thin::-webkit-scrollbar {
-  width: 4px;
+::-webkit-scrollbar {
+  width: 4px !important;
+}
+::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+::-webkit-scrollbar-thumb {
+  background: #024a70 !important;
+  border-radius: 2px;
+}
+/* .scrollbar-thin::-webkit-scrollbar {
+  width: 6px !important;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: #3f3f46;
+  background-color: #3f3f46 !important;
+  border-radius: 9999px !important;
 }
-/* .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: #52525b;
-} */
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: #52525b !important;
+}
 .scrollbar-thin::-webkit-scrollbar-track {
-  background-color: #1f2937;
-}
+  background-color: transparent !important;
+} */
