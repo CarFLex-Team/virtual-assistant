@@ -225,6 +225,7 @@ export default function ChatWindow() {
           // summary: aiData.summary,
           type: "bot",
           content: aiData?.answer,
+          visual: aiData?.visual || null,
           timestamp: new Date().toISOString(),
         };
       }
@@ -315,20 +316,20 @@ export default function ChatWindow() {
   };
 
   const renderMessage = (msg: ChatMessage) => {
-    switch (msg.type) {
+    switch (msg.visual?.type?.toLowerCase() || msg.type) {
       case "user":
       case "bot":
         return <SafeMessage message={msg} />;
       case "time_series":
-        return <StatsChart apiData={msg.content} />;
+        return <StatsChart apiData={msg.visual} />;
       case "table":
-        return <TableView data={msg.content} />;
+        return <TableView data={msg.visual} />;
       case "ranking":
-        return <RankingView data={msg.content} />;
+        return <RankingView data={msg.visual} />;
       case "distribution":
-        return <DistributionView data={msg.content} />;
+        return <DistributionView data={msg.visual} />;
       case "clarification":
-        return <Clarification data={msg.content} onSelect={() => {}} />;
+        return <Clarification data={msg.visual} onSelect={() => {}} />;
       case "error":
         return <ErrorBubble content={msg.content} />;
       default:

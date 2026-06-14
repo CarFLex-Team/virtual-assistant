@@ -15,6 +15,7 @@ export type ChatMessage = {
     | "clarification"
     | "time_series";
   content: any;
+  visual?: any; // for charts/tables
   timestamp: string;
 };
 
