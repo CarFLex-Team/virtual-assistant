@@ -40,6 +40,16 @@ export default function ChatWindow() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [threads, activeThread, pendingThreads]);
   useEffect(() => {
+    const currentThread = getCurrentThread();
+    if (!currentThread || currentThread.buffer.length === 0) return;
+
+    const timer = setTimeout(() => {
+      flushMessagesToDB(currentThread.id);
+    }, 30_000);
+
+    return () => clearTimeout(timer);
+  }, [threads, pendingThreads, activeThread]);
+  useEffect(() => {
     if (!activeThread) return;
 
     // Get current thread from store
@@ -86,19 +96,36 @@ export default function ChatWindow() {
         threads.map((t) => (t.id === activeThread ? { ...currentThread } : t)),
       );
     }
-  }, [activeThread, pendingThreads]); // <-- remove threads/pendingThreads from deps to avoid loop
-  // useEffect(() => {
-  //   console.log(
-  //     "Active thread changed, loading message buffer from localStorage:",
-  //     activeThread,
-  //   );
-  //   const savedBuffer = localStorage.getItem(`messageBuffer ${activeThread}`);
-  //   console.log("messageBuffer", activeThread, "saved buffer ", savedBuffer);
-  //   if (savedBuffer) {
-  //     // console.log("Loaded message buffer from localStorage:", savedBuffer);
-  //     setMessageBuffer(JSON.parse(savedBuffer));
-  //   }
-  // }, [activeThread]);
+  }, [activeThread, pendingThreads]);
+
+  const flushMessagesToDB = async (threadId: string) => {
+    const thread =
+      threads.find((t) => t.id === threadId) ||
+      pendingThreads?.find((t) => t.id === threadId);
+    if (!thread || thread.buffer.length === 0) return;
+
+    try {
+      await fetch(`/api/threads/${threadId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: thread.buffer }),
+      });
+
+      // Clear buffer after flush
+      thread.buffer = [];
+
+      if (pendingThreads?.some((t) => t.id === threadId)) {
+        setPendingThreads(
+          pendingThreads.map((t) => (t.id === threadId ? { ...thread } : t)),
+        );
+      } else {
+        setThreads(threads.map((t) => (t.id === threadId ? { ...thread } : t)));
+      }
+      localStorage.removeItem(`messageBuffer ${threadId}`);
+    } catch (err) {
+      console.error("Failed to flush messages", err);
+    }
+  };
 
   const getCurrentThread = (): Thread | null => {
     if (!activeThread) return threads.length > 0 ? threads[0] : null;
@@ -267,34 +294,6 @@ export default function ChatWindow() {
       flushMessagesToDB(currentThread?.id);
     }
   };
-  const flushMessagesToDB = async (threadId: string) => {
-    const thread =
-      threads.find((t) => t.id === threadId) ||
-      pendingThreads?.find((t) => t.id === threadId);
-    if (!thread || thread.buffer.length === 0) return;
-
-    try {
-      await fetch(`/api/threads/${threadId}/messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: thread.buffer }),
-      });
-
-      // Clear buffer after flush
-      thread.buffer = [];
-
-      if (pendingThreads?.some((t) => t.id === threadId)) {
-        setPendingThreads(
-          pendingThreads.map((t) => (t.id === threadId ? { ...thread } : t)),
-        );
-      } else {
-        setThreads(threads.map((t) => (t.id === threadId ? { ...thread } : t)));
-      }
-      localStorage.removeItem(`messageBuffer ${threadId}`);
-    } catch (err) {
-      console.error("Failed to flush messages", err);
-    }
-  };
   const handleSend = () => {
     if (loading) {
       controllerRef.current?.abort();
@@ -320,16 +319,6 @@ export default function ChatWindow() {
       case "user":
       case "bot":
         return <SafeMessage message={msg} />;
-      // case "time_series":
-      //   return <StatsChart apiData={msg.visual} />;
-      // case "table":
-      //   return <TableView data={msg.visual} />;
-      // case "ranking":
-      //   return <RankingView data={msg.visual} />;
-      // case "distribution":
-      //   return <DistributionView data={msg.visual} />;
-      // case "clarification":
-      //   return <Clarification data={msg.visual} onSelect={() => {}} />;
       case "error":
         return <ErrorBubble content={msg.content} />;
       default:

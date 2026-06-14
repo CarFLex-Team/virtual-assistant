@@ -36,7 +36,6 @@ export default function TableView({ data }: TableViewProps) {
         </thead>
         <tbody>
           {data.rows.map((row, idx) => {
-            console.log(row);
             return (
               <tr key={idx} className="border-t hover:bg-gray-50">
                 {data.columns?.map((col, i) => (
