@@ -38,7 +38,7 @@ export default function MessageBubble({ message }: MessageProps) {
     <div
       className={`max-w-[70vw] px-4 py-2 rounded-xl wrap-break-word
         ${isUser ? "bg-sky-900 text-white  rounded-br-none" : "bg-white text-gray-800  rounded-bl-none"}
-        shadow-md`}
+        shadow-md ${message.visual && "w-[70vw]"} `}
     >
       <FormattedMessage text={message.content || "No content"} />
       {message.visual && renderMessage(message)}
