@@ -11,10 +11,13 @@ import {
   Pen,
   LayoutDashboard,
   LogOut,
+  User,
+  X,
 } from "lucide-react";
 import NavButton from "../ui/NavButton";
 import { useThreadStore } from "@/store/threadStore";
 import { authClient } from "@/lib/auth/auth-client";
+
 export default function Sidebar({
   open,
   setOpen,
@@ -43,8 +46,9 @@ export default function Sidebar({
     string | null
   >(null);
   const [tempTitle, setTempTitle] = useState("");
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const ellipsisRef = useRef<HTMLDivElement>(null);
-  // console.log("Sidebar render", { threads, pendingThreads });
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -61,6 +65,7 @@ export default function Sidebar({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [ellipsisRef]);
+
   const navItems = [
     {
       id: "Dashboard",
@@ -95,6 +100,7 @@ export default function Sidebar({
     const current = navItems.find((i) => i.href === window.location.pathname);
     setActiveNav(current?.label || null);
   }, []);
+
   useEffect(() => {
     if (
       window.location.pathname === "/chat" &&
@@ -131,6 +137,7 @@ export default function Sidebar({
     setActiveThread(id);
     router.push(`chat/?threadId=${id}`);
   };
+
   const handleThreadEdit = (id: string, e: any, title: string) => {
     e.stopPropagation();
     fetch(`/api/threads/${id}`, {
@@ -159,6 +166,25 @@ export default function Sidebar({
       }
     });
   };
+
+  const handleSignOut = async () => {
+    await authClient.signOut();
+    router.push("/login");
+  };
+
+  const handleEditProfile = () => {
+    setProfileModalOpen(false);
+    router.push("/profile"); // adjust to your actual profile route
+  };
+
+  const initials =
+    session?.user?.name
+      ?.split(" ")
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "U";
+
   return (
     <aside
       className={`h-screen flex flex-col justify-around sm:justify-between bg-background border-r-2 border-r-sky-950 px-4 py-6 transform  z-10 max-md:fixed max-md:inset-0 transition-transform ${
@@ -217,7 +243,7 @@ export default function Sidebar({
 
           {/* Threads */}
           {open && (
-            <div className="mt-6 overflow-y-visible ">
+            <div className="mt-6 overflow-y-auto max-h-[35vh]">
               <p className={`text-gray-400 ${open ? "px-4 py-1" : ""}`}>
                 Recent Chats
               </p>
@@ -313,18 +339,73 @@ export default function Sidebar({
           )}
         </div>
       </div>
+
       {session && (
-        <div
-          onClick={async () => {
-            await authClient.signOut();
-            router.push("/login");
-          }}
-          className={`cursor-pointer p-2 mt-10 rounded flex justify-between items-center ${open ? "px-4 py-3 rounded-lg" : "p-1 mb-2 rounded-md justify-center"} hover:bg-red-100 `}
-        >
-          <span className="text-red-500 flex items-center gap-1">
-            <LogOut /> {open ? "Sign Out" : ""}
-          </span>
-        </div>
+        <>
+          <div
+            onClick={() => setProfileModalOpen(true)}
+            className={`cursor-pointer mt-10 rounded flex items-center gap-2 transition-colors ${
+              open
+                ? "px-2 py-3 rounded-lg"
+                : "p-1 mb-2 rounded-md justify-center"
+            } hover:bg-gray-600  text-gray-100`}
+          >
+            <div className="w-8 h-8 rounded-full bg-sky-900 flex items-center justify-center text-xs font-semibold shrink-0">
+              {initials}
+            </div>
+
+            {open && (
+              <span className="truncate">
+                {session.user?.name || "Account"}
+              </span>
+            )}
+          </div>
+
+          {profileModalOpen && (
+            <div
+              className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+              onClick={() => setProfileModalOpen(false)}
+            >
+              <div
+                className="bg-background border border-sky-900 rounded-xl p-6 w-72 relative"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => setProfileModalOpen(false)}
+                  className="absolute top-3 right-3 text-gray-400 hover:text-white"
+                >
+                  <X size={18} />
+                </button>
+
+                <div className="flex flex-col items-center gap-2 mb-6">
+                  <div className="w-14 h-14 rounded-full bg-sky-900 flex items-center justify-center text-lg font-semibold text-white">
+                    {initials}
+                  </div>
+
+                  <p className="text-white font-semibold">
+                    {session.user?.name || "Account"}
+                  </p>
+                  <p className="text-gray-400 text-sm">{session.user?.email}</p>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <button
+                    // onClick={handleEditProfile}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-white hover:bg-sky-900 transition-colors"
+                  >
+                    <User size={16} /> Edit Profile
+                  </button>
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-red-500 hover:bg-red-100 hover:text-red-600 transition-colors"
+                  >
+                    <LogOut size={16} /> Sign Out
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </aside>
   );
