@@ -35,7 +35,7 @@ export default function ChatWindow() {
   const [loading, setLoading] = useState(false);
   const controllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [threads, activeThread, pendingThreads]);
@@ -49,6 +49,15 @@ export default function ChatWindow() {
 
     return () => clearTimeout(timer);
   }, [threads, pendingThreads, activeThread]);
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+
+    el.style.height = "auto"; // reset first so it can shrink too
+    const newHeight = Math.min(el.scrollHeight, 200);
+    el.style.height = `${newHeight}px`;
+    el.style.overflowY = el.scrollHeight > 200 ? "auto" : "hidden";
+  }, [input]);
   useEffect(() => {
     if (!activeThread) return;
 
@@ -254,13 +263,14 @@ export default function ChatWindow() {
         );
       }
     } catch (err) {
-      console.error("Failed to fetch AI response", err);
+      // console.error("Failed to fetch AI response", err);
       const errorMessage: ChatMessage = {
         id: Date.now() + 3,
         type: "error",
         content: {
-          code: "AI_FETCH_ERROR",
-          message: "Failed to fetch AI response",
+          code: "Error While Responding",
+          message:
+            "An error occurred while fetching the AI response. Please try again.",
         },
         timestamp: new Date().toISOString(),
       };
@@ -279,6 +289,10 @@ export default function ChatWindow() {
       setLoading(false);
     }
     if (!input.trim()) return;
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.overflowY = "hidden";
+    }
     sendMessage(input);
   };
 
@@ -353,17 +367,25 @@ export default function ChatWindow() {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="flex gap-2">
-          <input
-            type="text"
-            className="flex-1 border border-sky-900 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-950 text-white "
+        <div className="flex gap-2 items-end">
+          <textarea
+            ref={textareaRef}
+            style={{ maxHeight: 200 }}
+            rows={1}
+            className="flex-1 border border-sky-900 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-950 text-white resize-none max-h-20"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault(); // stop the newline from being added
+                handleSend();
+              }
+              // if Shift+Enter, do nothing special — textarea inserts \n by default
+            }}
             placeholder="Type a message..."
           />
           <button
-            className="bg-sky-900 hover:bg-sky-800 text-white font-semibold p-2 rounded-xl transition-colors duration-200 cursor-pointer "
+            className="bg-sky-900 hover:bg-sky-800 text-white font-semibold p-2 rounded-xl transition-colors duration-200 cursor-pointer"
             onClick={handleSend}
           >
             {loading ? <Square /> : <ArrowUp />}
