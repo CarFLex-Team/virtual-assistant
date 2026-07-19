@@ -21,10 +21,8 @@ export default function DailyBrief({
               <div className="text-sm opacity-90 mb-1">
                 AI Morning Operations Brief
               </div>
-              <h2 className="text-white">Cairo Operations Center</h2>
-              <div className="text-sm opacity-90 mt-1">
-                Friday, 23-May-2025 08:45
-              </div>
+              <h2 className="text-white">UAE Operations Center</h2>
+              <div className="text-sm opacity-90 mt-1">Sunday, 19-Jul-2026</div>
             </div>
             <button
               onClick={() => setShowBrief(false)}
