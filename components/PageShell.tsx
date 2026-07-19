@@ -3,12 +3,14 @@ import { Suspense, useEffect, useState } from "react";
 import Sidebar from "./Nav/Sidebar";
 import { useThreadStore } from "@/store/threadStore";
 import TopNav from "./Nav/TopNav";
-
+import { authClient } from "@/lib/auth/auth-client";
+import { useRouter } from "next/navigation";
 export default function PageShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [threadsLoaded, setThreadsLoaded] = useState(false);
   const { setThreads } = useThreadStore();
-
+  const { data: session } = authClient.useSession();
+  const router = useRouter();
   useEffect(() => {
     const loadThreads = async () => {
       setThreadsLoaded(false);
@@ -21,7 +23,9 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
     };
     loadThreads();
   }, [setThreads]);
-
+  if (!session) {
+    router.push("/login");
+  }
   return (
     <div className="flex h-screen">
       <Suspense fallback={<div>Loading...</div>}>
