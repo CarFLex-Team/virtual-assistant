@@ -20,6 +20,7 @@ interface MessageProps {
 
 export default function MessageBubble({ message }: MessageProps) {
   const isUser = message.type === "user";
+
   const renderMessage = (msg: ChatMessage) => {
     switch (msg.visual?.type?.toLowerCase()) {
       case "trend":
@@ -32,16 +33,23 @@ export default function MessageBubble({ message }: MessageProps) {
         return <DistributionView data={msg.visual} />;
       case "clarification":
         return <Clarification data={msg.visual} onSelect={() => {}} />;
+      default:
+        return null;
     }
   };
+
   return (
     <div
-      className={`max-w-[70vw] px-4 py-2 rounded-xl wrap-break-word
-        ${isUser ? "bg-sky-900 text-white  rounded-br-none" : "bg-white text-gray-800  rounded-bl-none"}
-        shadow-md ${message.visual && "w-[70vw]"} `}
+      className={`px-4 py-2.5 rounded-2xl wrap-break-word shadow-sm
+        ${message.visual ? "w-[70vw]" : "max-w-[70vw]"}
+        ${
+          isUser
+            ? "bg-[#38BDF8] text-background rounded-br-sm"
+            : "bg-surface border border-border text-slate-100 rounded-bl-sm"
+        }`}
     >
       <FormattedMessage text={message.content || "No content"} />
-      {message.visual && renderMessage(message)}
+      {message.visual && renderMessage(message as ChatMessage)}
     </div>
   );
 }

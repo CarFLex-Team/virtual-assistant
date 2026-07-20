@@ -5,47 +5,37 @@ interface TableViewProps {
     rows: Record<string, any>[];
   };
 }
-// const tempColumns = [
-//   "id",
-//   "customer",
-//   "date",
-//   "product",
-//   "category",
-//   "region",
-//   "supplier",
-//   "quantity",
-//   "price",
-// ];
+
 export default function TableView({ data }: TableViewProps) {
   return (
-    <div className="overflow-auto bg-white p-4 rounded-xl shadow-lg border w-full border-gray-200 max-h-100">
+    <div className="overflow-auto bg-background p-4 rounded-xl border w-full border-border max-h-100">
       {data.title && (
-        <h3 className="text-sm font-bold text-sky-900 pb-3 sticky top-0 bg-white">
+        <h3 className="text-sm font-bold text-slate-100 pb-3 sticky top-0 bg-background">
           {data.title}
         </h3>
       )}
       <table className="w-full text-left table-auto">
-        <thead className="bg-gray-100">
+        <thead className="bg-surface">
           <tr>
             {data.columns?.map((col) => (
-              <th key={col} className="px-4 py-2 text-sky-900 font-semibold">
+              <th key={col} className="px-4 py-2 text-slate-100 font-semibold">
                 {col}
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {data.rows.map((row, idx) => {
-            return (
-              <tr key={idx} className="border-t hover:bg-gray-50">
-                {data.columns?.map((col, i) => (
-                  <td key={col} className="px-4 py-2 text-gray-800">
-                    {row[i] || row[col] || ""}
-                  </td>
-                ))}
-              </tr>
-            );
-          })}
+          {data.rows.map((row, idx) => (
+            <tr key={idx} className="border-t border-border hover:bg-surface">
+              {data.columns?.map((col) => (
+                <td key={col} className="px-4 py-2 text-slate-300">
+                  {/* row is keyed by column name — the old `row[i]` numeric-index
+                      fallback never matched real data and was dead code */}
+                  {row[col] ?? ""}
+                </td>
+              ))}
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

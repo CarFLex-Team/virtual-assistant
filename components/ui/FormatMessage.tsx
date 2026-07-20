@@ -6,31 +6,37 @@ export default function FormattedMessage({ text }: { text: string }) {
       {lines.map((line, i) => {
         if (line.startsWith("- ")) {
           const content = line.slice(2);
-          const [year, ...rest] = content.split(":");
+          const hasLabel = content.includes(":");
+          const [label, ...rest] = content.split(":");
+
           return (
             <div key={i} className="flex gap-2">
-              <span className=" mt-0.5">•</span>
-              <span>
-                <span className="font-bold text-sky-900">{year}:</span>
-                <span>{rest.join(":")}</span>
-              </span>
+              <span className="mt-0.5">•</span>
+              {hasLabel ? (
+                <span>
+                  <span className="font-bold text-[#38BDF8]">{label}:</span>
+                  <span>{rest.join(":")}</span>
+                </span>
+              ) : (
+                <span>{content}</span>
+              )}
             </div>
           );
         }
 
-        if (line.startsWith("Recommendation:")) {
+        if (line.toLowerCase().startsWith("recommendation:")) {
           return (
-            <p key={i} className="italic border-t border-brand-mid pt-3 mt-1">
-              <span className="font-bold not-italic text-sky-900">
+            <p key={i} className="italic border-t border-border pt-3 mt-1">
+              <span className="font-bold not-italic text-[#38BDF8]">
                 Recommendation:{" "}
               </span>
-              {line.replace("Recommendation:", "").trim()}
+              {line.slice(line.indexOf(":") + 1).trim()}
             </p>
           );
         }
 
         return (
-          <p key={i} className=" font-medium">
+          <p key={i} className="font-medium">
             {line}
           </p>
         );

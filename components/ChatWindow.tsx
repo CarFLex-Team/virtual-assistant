@@ -1,16 +1,16 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, Square } from "lucide-react";
+import { ArrowUp, Square, Sparkles } from "lucide-react";
 import Message from "./MessageBubble";
-import StatsChart from "./StatsChart";
-import TableView from "./TableView";
-import RankingView from "./RankingView";
-import DistributionView from "./DistributionView";
-import Clarification from "./Clarification";
 import ErrorBubble from "./ErrorBubble";
 import { fetchAIResponse } from "@/utils/api";
 import { useThreadStore, Thread, ChatMessage } from "@/store/threadStore";
-import StarBackground from "./StarBackground";
+
+const SUGGESTIONS = [
+  "What you should actually be buying this week?",
+  "Trace supplier risk and dependency issues",
+  "Top inventory risks right now",
+];
 
 export default function ChatWindow() {
   const {
@@ -20,25 +20,17 @@ export default function ChatWindow() {
     setActiveThread,
     pendingThreads,
     setPendingThreads,
-    addToBuffer,
-    messageBuffer,
-    clearBuffer,
-    setMessageBuffer,
   } = useThreadStore();
-  // console.log(
-  //   "ChatWindow render - activeThread:",
-  //   activeThread,
-  //   "threads:",
-  //   threads,
-  // );
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const controllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [threads, activeThread, pendingThreads]);
+
   useEffect(() => {
     const currentThread = getCurrentThread();
     if (!currentThread || currentThread.buffer.length === 0) return;
@@ -49,15 +41,20 @@ export default function ChatWindow() {
 
     return () => clearTimeout(timer);
   }, [threads, pendingThreads, activeThread]);
+
+  // Single source of truth for textarea auto-grow (fixes the old maxHeight:200 vs max-h-20 conflict)
+  const TEXTAREA_MAX_HEIGHT = 160;
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
 
-    el.style.height = "auto"; // reset first so it can shrink too
-    const newHeight = Math.min(el.scrollHeight, 200);
+    el.style.height = "auto";
+    const newHeight = Math.min(el.scrollHeight, TEXTAREA_MAX_HEIGHT);
     el.style.height = `${newHeight}px`;
-    el.style.overflowY = el.scrollHeight > 200 ? "auto" : "hidden";
+    el.style.overflowY =
+      el.scrollHeight > TEXTAREA_MAX_HEIGHT ? "auto" : "hidden";
   }, [input]);
+
   useEffect(() => {
     if (!activeThread) return;
 
@@ -152,7 +149,6 @@ export default function ChatWindow() {
       })
         .then((res) => res.json())
         .then((data) => {
-          console.log("Created thread on server:", data);
           currentThread = {
             id: data[0].id,
             title: data[0].title,
@@ -161,7 +157,6 @@ export default function ChatWindow() {
             createdAt: data[0].created_at,
             saved: true,
           };
-          console.log("Current thread after creation:", currentThread);
           setActiveThread(currentThread.id);
         })
         .catch((err) => {
@@ -185,7 +180,6 @@ export default function ChatWindow() {
       content,
       timestamp: new Date().toISOString(),
     };
-    console.log("currentThread before adding message:", currentThread);
 
     currentThread?.chat_messages.push(userMessage);
     currentThread?.buffer.push(userMessage);
@@ -237,7 +231,6 @@ export default function ChatWindow() {
       } else {
         aiMessage = {
           id: Date.now() + 2,
-          // summary: aiData.summary,
           type: "bot",
           content: aiData?.answer,
           visual: aiData?.visual || null,
@@ -263,7 +256,6 @@ export default function ChatWindow() {
         );
       }
     } catch (err) {
-      // console.error("Failed to fetch AI response", err);
       const errorMessage: ChatMessage = {
         id: Date.now() + 3,
         type: "error",
@@ -283,10 +275,12 @@ export default function ChatWindow() {
       flushMessagesToDB(currentThread?.id);
     }
   };
+
   const handleSend = () => {
     if (loading) {
       controllerRef.current?.abort();
       setLoading(false);
+      return;
     }
     if (!input.trim()) return;
     if (textareaRef.current) {
@@ -324,33 +318,49 @@ export default function ChatWindow() {
   const showWelcome = currentThread && currentThread.chat_messages.length === 0;
 
   return (
-    <div className="h-[95vh] p-4 bg-transparent">
-      {displayedMessages.length <= 0 && <StarBackground />}
-      <div className="flex flex-col gap-2 md:gap-4 h-full p-4 rounded-lg ">
+    <div className="h-[95vh] p-4 bg-background relative overflow-hidden">
+      {displayedMessages.length <= 0 && (
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.12]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, #38BDF8 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+          }}
+        />
+      )}
+
+      <div className="relative flex flex-col gap-2 md:gap-4 h-full rounded-lg">
         {showWelcome && (
-          <div className="h-full flex flex-col items-center justify-center gap-6 z-5">
-            <div className="p-6 rounded-2xl bg-linear-to-b from-white to-sky-100 px-4s shadow-lg flex flex-col items-center gap-4 max-w-xs">
-              <img
-                src="/chat-bot2.png"
-                alt="Chat Bot"
-                className="md:w-32 md:h-32 w-24 h-24 object-contain"
-              />
-              <p className="text-center text-gray-700 text-lg font-semibold">
-                Hi, I'm <span className="text-primary-600">ELIARA</span>, your
-                AI assistant.
+          <div className="h-full flex flex-col items-center justify-center gap-6 ">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-14 h-14 rounded-2xl bg-surface border border-border flex items-center justify-center">
+                <Sparkles className="text-[#38BDF8]" size={26} />
+              </div>
+              <p className="text-center text-slate-100 text-xl font-semibold tracking-tight">
+                Hi, I'm <span className="text-[#38BDF8]">ELIARA</span>
               </p>
-              <p className="text-center text-gray-500 text-sm">
-                Ask me anything about your data and I'll provide insights
-                instantly.
+              <p className="text-center text-slate-400 text-sm max-w-xs">
+                Ask about your data and get instant insights.
               </p>
             </div>
-            <p className="text-gray-400 text-sm italic">
-              Tip: Try typing a question like "Show me sales for last week"
-            </p>
+
+            {/* Suggestion chips replace the static italic tip — they're actionable, not decorative */}
+            <div className="flex flex-wrap justify-center gap-2 max-w-md">
+              {SUGGESTIONS.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => sendMessage(s)}
+                  className="text-sm text-slate-300 bg-surface border border-border rounded-full px-4 py-2 hover:border-[#38BDF8] hover:text-white transition-colors cursor-pointer"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 rounded-lg ">
+        <div className="flex-1 overflow-y-auto px-2 py-4 space-y-3 ">
           {displayedMessages.map((msg: ChatMessage) => (
             <div
               key={msg.id}
@@ -359,36 +369,42 @@ export default function ChatWindow() {
               {renderMessage(msg)}
             </div>
           ))}
+
           {loading && (
             <div className="flex justify-start">
-              <div className="animate-pulse max-w-2xl px-4 py-2 rounded-xl wrap-break-word  bg-white text-gray-800  rounded-bl-none h-6" />
+              <div className="flex items-center gap-1.5 px-4 py-3 rounded-2xl rounded-bl-sm bg-surface border border-border">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8] animate-bounce [animation-delay:-0.3s]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8] animate-bounce [animation-delay:-0.15s]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8] animate-bounce" />
+              </div>
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="flex gap-2 items-end">
+        <div className=" flex gap-2 items-end bg-surface border border-border rounded-2xl p-2 focus-within:border-[#38BDF8] transition-colors">
           <textarea
             ref={textareaRef}
-            style={{ maxHeight: 200 }}
             rows={1}
-            className="flex-1 border border-sky-900 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-950 text-white resize-none max-h-20"
+            className="flex-1 bg-transparent px-3 py-2 focus:outline-none text-slate-100 placeholder:text-slate-500 resize-none"
+            style={{ maxHeight: TEXTAREA_MAX_HEIGHT }}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault(); // stop the newline from being added
+                e.preventDefault();
                 handleSend();
               }
-              // if Shift+Enter, do nothing special — textarea inserts \n by default
             }}
-            placeholder="Type a message..."
+            placeholder="Ask about your data..."
           />
           <button
-            className="bg-sky-900 hover:bg-sky-800 text-white font-semibold p-2 rounded-xl transition-colors duration-200 cursor-pointer"
+            className="shrink-0 bg-[#38BDF8] hover:bg-[#0EA5E9] disabled:opacity-40 disabled:cursor-not-allowed text-background font-semibold p-2.5 rounded-xl transition-colors cursor-pointer"
             onClick={handleSend}
+            disabled={!loading && !input.trim()}
+            aria-label={loading ? "Stop response" : "Send message"}
           >
-            {loading ? <Square /> : <ArrowUp />}
+            {loading ? <Square size={18} /> : <ArrowUp size={18} />}
           </button>
         </div>
       </div>
