@@ -13,7 +13,7 @@ import {
   LogOut,
   User,
   X,
-  Save,
+  Sparkles,
 } from "lucide-react";
 import NavButton from "../ui/NavButton";
 import { useThreadStore } from "@/store/threadStore";
@@ -201,66 +201,87 @@ export default function Sidebar({
       .join("")
       .toUpperCase() || "U";
 
+  // Thread title fallback — guards against `content` being a stringified object
+  const getThreadLabel = (t: (typeof threads)[number]) => {
+    if (t.title !== "New Chat") return t.title;
+    const raw =
+      t.chat_messages[0]?.content ?? t.buffer[0]?.content ?? "New Chat";
+    const text = typeof raw === "string" ? raw : "New Chat";
+    return text.split(" ").slice(0, 4).join(" ") || "New Chat";
+  };
+
   return (
     <aside
-      className={`h-screen flex flex-col justify-around sm:justify-between bg-background border-r-2 border-r-sky-950 px-4 py-6 transform  z-10 max-md:fixed max-md:inset-0 transition-transform ${
-        open ? "w-58 max-md:translate-x-0" : "w-16 max-md:-translate-x-full"
+      className={`h-screen flex flex-col justify-between bg-background border-r border-border px-3 py-6 z-10 max-md:fixed max-md:inset-0 transition-[width,transform] duration-200 ${
+        open ? "w-60 max-md:translate-x-0" : "w-16 max-md:-translate-x-full"
       }`}
     >
-      <div className="">
-        {/* Logo & toggle */}
+      <div className="flex flex-col min-h-0">
         <div
-          className={`flex items-center mb-4 ${open ? "justify-between" : "justify-center"}`}
+          className={`flex items-center mb-8 px-1 ${open ? "justify-between" : "justify-center"}`}
         >
           {open && (
             <div className="flex gap-2 items-center">
-              <img src="/Logo.png" className="w-7 rounded-lg" />
-              <p className="text-gray-100 font-bold text-xl">ELIARA AI</p>
+              <div className="w-7 h-7 rounded-lg bg-surface border border-border flex items-center justify-center">
+                <Sparkles size={15} className="text-[#38BDF8]" />
+              </div>
+              <p className="text-slate-100 font-semibold text-lg tracking-tight">
+                ELIARA
+              </p>
             </div>
           )}
           <button
             onClick={() => setOpen(!open)}
-            className="p-1 rounded-sm hover:bg-gray-600 text-gray-300"
+            className="p-1.5 rounded-md hover:bg-surface text-slate-400 hover:text-slate-100 transition-colors cursor-pointer"
           >
-            {open ? <PanelLeftClose size={22} /> : <PanelLeftOpen size={22} />}
+            {open ? <PanelLeftClose size={20} /> : <PanelLeftOpen size={20} />}
           </button>
         </div>
 
         {/* Navigation */}
-        <div className="flex flex-col gap-2 mt-10">
-          {navItems.map((item) => (
-            <NavButton
-              key={item.href}
-              onClick={() => {
-                setActiveNav(item.label);
-                if (item.label === "Statistics" || item.label === "Dashboard") {
-                  setActiveThread(null);
-                }
-                item.onClick && item.onClick();
-              }}
-              item={item}
-              isActive={activeNav === item.label}
-              className={
-                open
-                  ? "px-4 py-3 rounded-lg"
-                  : "p-1 mb-2 rounded-md justify-center"
-              }
-            >
-              <item.icon size={20} strokeWidth={3} />
-              {open && (
-                <span
-                  className={` ${activeNav === item.label ? "text-white" : "text-sky-100"}`}
-                >
-                  {item.label}
-                </span>
-              )}
-            </NavButton>
-          ))}
+        <div className="flex flex-col gap-1">
+          {navItems.map((item) => {
+            const isActive = activeNav === item.label;
+            return (
+              <NavButton
+                key={item.href}
+                onClick={() => {
+                  setActiveNav(item.label);
+                  if (
+                    item.label === "Statistics" ||
+                    item.label === "Dashboard"
+                  ) {
+                    setActiveThread(null);
+                  }
+                  item.onClick && item.onClick();
+                }}
+                item={item}
+                isActive={isActive}
+                className={`transition-colors ${
+                  isActive
+                    ? "bg-surface text-slate-100"
+                    : "text-slate-400 hover:bg-surface hover:text-slate-100"
+                } ${
+                  open
+                    ? "px-3 py-2.5 rounded-lg"
+                    : "p-2 mb-1 rounded-lg justify-center"
+                }`}
+              >
+                <item.icon
+                  size={19}
+                  strokeWidth={2.25}
+                  className={isActive ? "text-[#38BDF8]" : ""}
+                />
+                {open && (
+                  <span className="text-sm font-medium">{item.label}</span>
+                )}
+              </NavButton>
+            );
+          })}
 
-          {/* Threads */}
           {open && (
-            <div className="mt-6 overflow-y-auto max-h-[35vh]">
-              <p className={`text-gray-400 ${open ? "px-4 py-1" : ""}`}>
+            <div className="mt-6 overflow-y-auto max-h-[38vh]">
+              <p className="text-[11px] uppercase tracking-wide text-slate-500 px-3 py-1 mb-1">
                 Recent Chats
               </p>
               {[...(pendingThreads ? pendingThreads : []), ...threads].map(
@@ -271,10 +292,10 @@ export default function Sidebar({
                       setActiveThreadAndUrl(t.id);
                       setActiveNav(null);
                     }}
-                    className={`cursor-pointer p-2 my-1 rounded flex justify-between items-center relative ${
+                    className={`group cursor-pointer px-3 py-2 my-0.5 rounded-lg flex justify-between items-center relative transition-colors ${
                       t.id === activeThread
-                        ? "bg-blue-100"
-                        : "text-white hover:bg-gray-100 hover:text-gray-900"
+                        ? "bg-surface text-slate-100"
+                        : "text-slate-400 hover:bg-surface hover:text-slate-100"
                     }`}
                   >
                     {editingThreadId === t.id ? (
@@ -294,21 +315,11 @@ export default function Sidebar({
                             setEditingThreadId(null);
                           }
                         }}
-                        className="w-full rounded border border-gray-300 px-1"
+                        className="w-full rounded border border-[#38BDF8] bg-background text-slate-100 px-2 py-0.5 focus:outline-none"
                       />
                     ) : (
-                      <p>
-                        {t.title !== "New Chat"
-                          ? t.title
-                          : t.chat_messages[0]?.content
-                              ?.split(" ")
-                              .slice(0, 2)
-                              .join(" ") ||
-                            t.buffer[0]?.content
-                              ?.split(" ")
-                              .slice(0, 2)
-                              .join(" ") ||
-                            "New Chat"}
+                      <p className="text-sm truncate pr-2">
+                        {getThreadLabel(t)}
                       </p>
                     )}
                     {t.saved && (
@@ -319,18 +330,18 @@ export default function Sidebar({
                             ellipsisOpenThreadId === t.id ? null : t.id,
                           );
                         }}
-                        className="p-1 hover:bg-gray-200  rounded-lg"
+                        className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-border transition-opacity shrink-0"
                       >
-                        <EllipsisVertical size={18} />
+                        <EllipsisVertical size={16} />
                       </div>
                     )}
                     {ellipsisOpenThreadId === t.id && (
                       <div
-                        className="absolute right-0 mt-1 bg-background rounded-lg shadow-md z-20 p-1 "
+                        className="absolute right-0 top-full mt-1 bg-surface border border-border rounded-lg shadow-lg z-20 p-1 w-36"
                         ref={ellipsisRef}
                       >
                         <button
-                          className="flex justify-start items-center gap-1 px-5 py-1 hover:bg-gray-500 w-full text-left text-white rounded-lg my-1"
+                          className="flex items-center gap-2 px-3 py-1.5 hover:bg-border w-full text-left text-slate-200 rounded-md text-sm"
                           onClick={(e) => {
                             e.stopPropagation();
                             setEditingThreadId(t.id);
@@ -338,13 +349,13 @@ export default function Sidebar({
                             setEllipsisOpenThreadId(null);
                           }}
                         >
-                          <Pen size={16} /> Rename
+                          <Pen size={14} /> Rename
                         </button>
                         <button
-                          className="flex justify-start items-center gap-1 px-5 py-1 hover:bg-red-200 w-full  text-red-500 rounded-lg my-1"
+                          className="flex items-center gap-2 px-3 py-1.5 hover:bg-[#3F1D1D] w-full text-left text-[#F87171] rounded-md text-sm"
                           onClick={(e) => handleThreadDelete(t.id, e)}
                         >
-                          <Trash size={16} /> Delete
+                          <Trash size={14} /> Delete
                         </button>
                       </div>
                     )}
@@ -360,18 +371,16 @@ export default function Sidebar({
         <>
           <div
             onClick={() => setProfileModalOpen(true)}
-            className={`cursor-pointer mt-10 rounded flex items-center gap-2 transition-colors ${
-              open
-                ? "px-2 py-3 rounded-lg"
-                : "p-1 mb-2 rounded-md justify-center"
-            } hover:bg-gray-600  text-gray-100`}
+            className={`cursor-pointer rounded-lg flex items-center gap-2 transition-colors ${
+              open ? "px-2 py-2.5" : "p-2 justify-center"
+            } hover:bg-surface text-slate-200`}
           >
-            <div className="w-8 h-8 rounded-full bg-sky-900 flex items-center justify-center text-xs font-semibold shrink-0">
+            <div className="w-8 h-8 rounded-full bg-surface border border-border flex items-center justify-center text-xs font-semibold text-[#38BDF8] shrink-0">
               {initials}
             </div>
 
             {open && (
-              <span className="truncate">
+              <span className="truncate text-sm">
                 {session.user?.name || "Account"}
               </span>
             )}
@@ -386,7 +395,7 @@ export default function Sidebar({
               }}
             >
               <div
-                className="bg-background border border-sky-900 rounded-xl p-6 w-72 relative"
+                className="bg-background border border-border rounded-2xl p-6 w-72 relative shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
@@ -394,13 +403,13 @@ export default function Sidebar({
                     setIsEditingProfile(false);
                     setProfileModalOpen(false);
                   }}
-                  className="absolute top-3 right-3 text-gray-400 hover:text-white"
+                  className="absolute top-3 right-3 text-slate-500 hover:text-slate-200 transition-colors"
                 >
                   <X size={18} />
                 </button>
 
                 <div className="flex flex-col items-center gap-2 mb-6">
-                  <div className="w-14 h-14 rounded-full bg-sky-900 flex items-center justify-center text-lg font-semibold text-white">
+                  <div className="w-14 h-14 rounded-full bg-surface border border-border flex items-center justify-center text-lg font-semibold text-[#38BDF8]">
                     {initials}
                   </div>
 
@@ -409,28 +418,32 @@ export default function Sidebar({
                     value={name}
                     readOnly={!isEditingProfile}
                     onChange={(e) => setName(e.target.value)}
-                    className={`text-white  bg-transparent  focus:outline-none ${isEditingProfile ? "focus:ring-2 focus:ring-blue-900  border-b border-sky-900" : ""} text-center w-full`}
+                    className={`text-slate-100 bg-transparent focus:outline-none text-center w-full ${
+                      isEditingProfile
+                        ? "focus:ring-2 focus:ring-[#38BDF8] border-b border-border rounded-sm"
+                        : ""
+                    }`}
                   />
-                  <p className="text-gray-400 text-sm">{session.user?.email}</p>
+                  <p className="text-slate-500 text-sm">
+                    {session.user?.email}
+                  </p>
                 </div>
                 {editError && (
-                  <p className="font-body text-brand-red text-sm mt-3">
+                  <p className="text-[#F87171] text-sm mt-1 mb-3 text-center">
                     {editError}
                   </p>
                 )}
                 <div className="flex flex-col gap-2">
-                  {isEditingProfile && (
-                    <div className="flex items-center justify-center gap-2 ">
+                  {isEditingProfile ? (
+                    <div className="flex items-center justify-center gap-2">
                       <button
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white hover:bg-sky-900 transition-colors`}
-                        onClick={() => {
-                          handleEditProfile();
-                        }}
+                        className="px-4 py-2 rounded-lg text-background bg-[#38BDF8] hover:bg-[#0EA5E9] font-medium transition-colors cursor-pointer"
+                        onClick={handleEditProfile}
                       >
-                        {editLoading ? "Saving..." : <>Save</>}
+                        {editLoading ? "Saving..." : "Save"}
                       </button>
                       <button
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-red-500 hover:bg-red-100 hover:text-red-600 transition-colors`}
+                        className="px-4 py-2 rounded-lg text-slate-400 hover:bg-surface hover:text-slate-200 transition-colors cursor-pointer"
                         onClick={() => {
                           setIsEditingProfile(false);
                           setName(session?.user?.name || "Account");
@@ -439,37 +452,19 @@ export default function Sidebar({
                         Cancel
                       </button>
                     </div>
-                  )}
-                  {!isEditingProfile && (
+                  ) : (
                     <button
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white hover:bg-sky-900 transition-colors`}
-                      onClick={() => {
-                        if (isEditingProfile) handleEditProfile();
-                        else setIsEditingProfile(true);
-                      }}
+                      className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-slate-200 hover:bg-surface border border-border transition-colors cursor-pointer"
+                      onClick={() => setIsEditingProfile(true)}
                     >
-                      {editLoading ? (
-                        "Saving..."
-                      ) : isEditingProfile ? (
-                        "Save Changes"
-                      ) : (
-                        <>
-                          <User size={16} /> Edit Profile
-                        </>
-                      )}
+                      <User size={16} /> Edit profile
                     </button>
                   )}
-                  {/* <button
-                    onClick={handleEditProfile}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-white hover:bg-sky-900 transition-colors"
-                  >
-                    <User size={16} /> Edit Profile
-                  </button> */}
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-red-500 hover:bg-red-100 hover:text-red-600 transition-colors"
+                    className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-[#F87171] hover:bg-[#3F1D1D] transition-colors cursor-pointer"
                   >
-                    <LogOut size={16} /> Sign Out
+                    <LogOut size={16} /> Sign out
                   </button>
                 </div>
               </div>
