@@ -9,7 +9,7 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [threadsLoaded, setThreadsLoaded] = useState(false);
   const { setThreads } = useThreadStore();
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
   useEffect(() => {
     const loadThreads = async () => {
@@ -23,7 +23,7 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
     };
     loadThreads();
   }, [setThreads]);
-  if (!session) {
+  if (!session && !isPending) {
     router.push("/login");
   }
   return (

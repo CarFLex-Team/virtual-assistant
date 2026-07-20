@@ -13,10 +13,11 @@ import {
   LogOut,
   User,
   X,
+  Save,
 } from "lucide-react";
 import NavButton from "../ui/NavButton";
 import { useThreadStore } from "@/store/threadStore";
-import { authClient } from "@/lib/auth/auth-client";
+import { authClient, updateUser } from "@/lib/auth/auth-client";
 
 export default function Sidebar({
   open,
@@ -42,6 +43,10 @@ export default function Sidebar({
 
   const [activeNav, setActiveNav] = useState<string | null>(null);
   const [editingThreadId, setEditingThreadId] = useState<string | null>(null);
+  const [name, setName] = useState(session?.user?.name || "Account");
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
   const [ellipsisOpenThreadId, setEllipsisOpenThreadId] = useState<
     string | null
   >(null);
@@ -100,7 +105,9 @@ export default function Sidebar({
     const current = navItems.find((i) => i.href === window.location.pathname);
     setActiveNav(current?.label || null);
   }, []);
-
+  useEffect(() => {
+    setName(session?.user?.name || "Account");
+  }, [session?.user?.name]);
   useEffect(() => {
     if (
       window.location.pathname === "/chat" &&
@@ -172,9 +179,18 @@ export default function Sidebar({
     router.push("/login");
   };
 
-  const handleEditProfile = () => {
-    setProfileModalOpen(false);
-    router.push("/profile"); // adjust to your actual profile route
+  const handleEditProfile = async () => {
+    setEditError(null);
+    setEditLoading(true);
+    const { error } = await updateUser({
+      name: name,
+    });
+    if (error) {
+      setEditError(error.message ?? "Invalid profile information.");
+    } else {
+      setIsEditingProfile(false);
+    }
+    setEditLoading(false);
   };
 
   const initials =
@@ -364,14 +380,20 @@ export default function Sidebar({
           {profileModalOpen && (
             <div
               className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
-              onClick={() => setProfileModalOpen(false)}
+              onClick={() => {
+                setProfileModalOpen(false);
+                setIsEditingProfile(false);
+              }}
             >
               <div
                 className="bg-background border border-sky-900 rounded-xl p-6 w-72 relative"
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
-                  onClick={() => setProfileModalOpen(false)}
+                  onClick={() => {
+                    setIsEditingProfile(false);
+                    setProfileModalOpen(false);
+                  }}
                   className="absolute top-3 right-3 text-gray-400 hover:text-white"
                 >
                   <X size={18} />
@@ -382,19 +404,67 @@ export default function Sidebar({
                     {initials}
                   </div>
 
-                  <p className="text-white font-semibold">
-                    {session.user?.name || "Account"}
-                  </p>
+                  <input
+                    type="text"
+                    value={name}
+                    readOnly={!isEditingProfile}
+                    onChange={(e) => setName(e.target.value)}
+                    className={`text-white  bg-transparent  focus:outline-none ${isEditingProfile ? "focus:ring-2 focus:ring-blue-900  border-b border-sky-900" : ""} text-center w-full`}
+                  />
                   <p className="text-gray-400 text-sm">{session.user?.email}</p>
                 </div>
-
+                {editError && (
+                  <p className="font-body text-brand-red text-sm mt-3">
+                    {editError}
+                  </p>
+                )}
                 <div className="flex flex-col gap-2">
-                  <button
-                    // onClick={handleEditProfile}
+                  {isEditingProfile && (
+                    <div className="flex items-center justify-center gap-2 ">
+                      <button
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white hover:bg-sky-900 transition-colors`}
+                        onClick={() => {
+                          handleEditProfile();
+                        }}
+                      >
+                        {editLoading ? "Saving..." : <>Save</>}
+                      </button>
+                      <button
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-red-500 hover:bg-red-100 hover:text-red-600 transition-colors`}
+                        onClick={() => {
+                          setIsEditingProfile(false);
+                          setName(session?.user?.name || "Account");
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                  {!isEditingProfile && (
+                    <button
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white hover:bg-sky-900 transition-colors`}
+                      onClick={() => {
+                        if (isEditingProfile) handleEditProfile();
+                        else setIsEditingProfile(true);
+                      }}
+                    >
+                      {editLoading ? (
+                        "Saving..."
+                      ) : isEditingProfile ? (
+                        "Save Changes"
+                      ) : (
+                        <>
+                          <User size={16} /> Edit Profile
+                        </>
+                      )}
+                    </button>
+                  )}
+                  {/* <button
+                    onClick={handleEditProfile}
                     className="flex items-center gap-2 px-4 py-2 rounded-lg text-white hover:bg-sky-900 transition-colors"
                   >
                     <User size={16} /> Edit Profile
-                  </button>
+                  </button> */}
                   <button
                     onClick={handleSignOut}
                     className="flex items-center gap-2 px-4 py-2 rounded-lg text-red-500 hover:bg-red-100 hover:text-red-600 transition-colors"
