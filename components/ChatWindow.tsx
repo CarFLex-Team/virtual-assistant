@@ -5,6 +5,7 @@ import Message from "./MessageBubble";
 import ErrorBubble from "./ErrorBubble";
 import { fetchAIResponse } from "@/utils/api";
 import { useThreadStore, Thread, ChatMessage } from "@/store/threadStore";
+import { formatChatDate } from "@/utils/formatChatDate";
 
 const SUGGESTIONS = [
   "What you should actually be buying this week?",
@@ -153,7 +154,7 @@ export default function ChatWindow() {
             title: data[0].title,
             chat_messages: [],
             buffer: [],
-            createdAt: data[0].created_at,
+            created_at: data[0].created_at,
             saved: true,
           };
           setActiveThread(currentThread.id);
@@ -165,7 +166,7 @@ export default function ChatWindow() {
             title: "New Chat",
             chat_messages: [],
             buffer: [],
-            createdAt: new Date().toISOString(),
+            created_at: new Date().toISOString(),
             saved: false,
           };
           setPendingThreads([currentThread!, ...(pendingThreads || [])]);
@@ -344,7 +345,6 @@ export default function ChatWindow() {
               </p>
             </div>
 
-            {/* Suggestion chips replace the static italic tip — they're actionable, not decorative */}
             <div className="flex flex-wrap justify-center gap-2 max-w-md">
               {SUGGESTIONS.map((s) => (
                 <button
@@ -360,6 +360,13 @@ export default function ChatWindow() {
         )}
 
         <div className="flex-1 overflow-y-auto px-2 py-4 space-y-3 ">
+          {currentThread && displayedMessages.length > 0 && (
+            <div className="flex justify-center mb-2">
+              <p className="text-slate-400 text-xs text-center">
+                {formatChatDate(currentThread.created_at)}
+              </p>
+            </div>
+          )}
           {displayedMessages.map((msg: ChatMessage) => (
             <div
               key={msg.id}

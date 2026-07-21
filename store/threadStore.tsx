@@ -14,7 +14,7 @@ export type Thread = {
   id: string;
   title?: string;
   chat_messages: ChatMessage[];
-  createdAt: string;
+  created_at: string;
   buffer: ChatMessage[]; // for unsaved messages
   saved?: boolean;
 };

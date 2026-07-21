@@ -159,7 +159,7 @@ export default function Sidebar({
         id: crypto.randomUUID(),
         title: "New Chat",
         chat_messages: [],
-        createdAt: new Date().toISOString(),
+        created_at: new Date().toISOString(),
         buffer: [],
       };
       setPendingThreads([newThread, ...(pendingThreads || [])]);
@@ -173,7 +173,7 @@ export default function Sidebar({
       id: crypto.randomUUID(),
       title: "New Chat",
       chat_messages: [],
-      createdAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
       buffer: [],
     };
     setPendingThreads([newThread, ...(pendingThreads || [])]);
@@ -490,7 +490,7 @@ export default function Sidebar({
                   {isEditingProfile ? (
                     <div className="flex items-center justify-center gap-2">
                       <button
-                        className="px-4 py-2 rounded-lg text-background bg-accent hover:bg-[var(--color-accent-hover)] font-medium transition-colors cursor-pointer"
+                        className="px-4 py-2 rounded-lg text-background bg-accent hover:bg-accent-hover font-medium transition-colors cursor-pointer"
                         onClick={handleEditProfile}
                       >
                         {editLoading ? "Saving..." : "Save"}
