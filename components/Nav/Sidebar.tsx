@@ -408,7 +408,7 @@ export default function Sidebar({
             <Pen size={14} /> Rename
           </button>
           <button
-            className="flex items-center gap-2 px-3 py-1.5 hover:bg-[#3F1D1D] w-full text-left text-red-400 rounded-md text-sm"
+            className="flex items-center gap-2 px-3 py-1.5 hover:bg-danger-bg w-full text-left text-red-400 rounded-md text-sm"
             onClick={(e) => {
               handleThreadDelete(ellipsisOpenThreadId, e);
               setEllipsisOpenThreadId(null);
@@ -515,7 +515,7 @@ export default function Sidebar({
                   )}
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-red-400 hover:bg-[#3F1D1D] transition-colors cursor-pointer"
+                    className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-red-400 hover:bg-danger-bg transition-colors cursor-pointer"
                   >
                     <LogOut size={16} /> Sign out
                   </button>

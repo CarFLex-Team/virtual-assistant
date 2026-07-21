@@ -14,7 +14,7 @@ export default function FormattedMessage({ text }: { text: string }) {
               <span className="mt-0.5">•</span>
               {hasLabel ? (
                 <span>
-                  <span className="font-bold text-[#38BDF8]">{label}:</span>
+                  <span className="font-bold text-accent">{label}:</span>
                   <span>{rest.join(":")}</span>
                 </span>
               ) : (
@@ -27,7 +27,7 @@ export default function FormattedMessage({ text }: { text: string }) {
         if (line.toLowerCase().startsWith("recommendation:")) {
           return (
             <p key={i} className="italic border-t border-border pt-3 mt-1">
-              <span className="font-bold not-italic text-[#38BDF8]">
+              <span className="font-bold not-italic text-accent">
                 Recommendation:{" "}
               </span>
               {line.slice(line.indexOf(":") + 1).trim()}

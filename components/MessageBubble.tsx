@@ -44,7 +44,7 @@ export default function MessageBubble({ message }: MessageProps) {
         ${message.visual ? "w-[70vw]" : "max-w-[70vw]"}
         ${
           isUser
-            ? "bg-[#38BDF8] text-background rounded-br-sm"
+            ? "bg-accent text-background rounded-br-sm"
             : "bg-surface border border-border text-slate-100 rounded-bl-sm"
         }`}
     >

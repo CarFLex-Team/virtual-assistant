@@ -9,17 +9,12 @@ interface NavButtonProps {
 }
 
 export default function NavButton(props: NavButtonProps) {
-  const { className, onClick, children, item, isActive } = props;
+  const { className, onClick, children, item } = props;
 
   return (
     <Link
       href={`${item.href}`}
-      className={`flex gap-2 items-center text-left w-full  font-medium text-sm transition-colors text-sky-100 hover:bg-gray-600 ${className} ${
-        isActive
-          ? " bg-primary-600 shadow-[0_0px_6px_rgba(0,0,0,0.5)]  text-white "
-          : //+ colorMap[item.label]
-            ""
-      }`}
+      className={`flex gap-2 items-center text-left w-full font-medium text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${className}`}
       onClick={onClick}
     >
       {children}

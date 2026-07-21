@@ -7,10 +7,11 @@ interface TableViewProps {
 }
 
 export default function TableView({ data }: TableViewProps) {
+  // console.log("TableView data:", data); // Debugging line to check the data structure
   return (
-    <div className="overflow-auto bg-background p-4 rounded-xl border w-full border-border max-h-100">
+    <div className="overflow-y-auto  bg-background rounded-xl border w-full border-border max-h-100">
       {data.title && (
-        <h3 className="text-sm font-bold text-slate-100 pb-3 sticky top-0 bg-background">
+        <h3 className="text-sm font-bold text-slate-100  sticky top-0 bg-background p-4">
           {data.title}
         </h3>
       )}
@@ -27,11 +28,11 @@ export default function TableView({ data }: TableViewProps) {
         <tbody>
           {data.rows.map((row, idx) => (
             <tr key={idx} className="border-t border-border hover:bg-surface">
-              {data.columns?.map((col) => (
+              {data.columns?.map((col, i) => (
                 <td key={col} className="px-4 py-2 text-slate-300">
                   {/* row is keyed by column name — the old `row[i]` numeric-index
                       fallback never matched real data and was dead code */}
-                  {row[col] ?? ""}
+                  {row[i] || row[col] || ""}
                 </td>
               ))}
             </tr>

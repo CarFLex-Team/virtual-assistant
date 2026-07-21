@@ -22,7 +22,7 @@ export default function RankingView({ data }: RankingViewProps) {
           <span className="min-w-32 text-slate-400 text-sm">{item.label}</span>
           <div className="flex-1 h-4 bg-border rounded-full relative overflow-hidden">
             <div
-              className="h-4 bg-[#38BDF8] rounded-full absolute top-0 left-0"
+              className="h-4 bg-accent rounded-full absolute top-0 left-0"
               style={{
                 width: `${Math.min((item.value / max) * 100, 100)}%`,
               }}

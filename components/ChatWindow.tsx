@@ -335,10 +335,10 @@ export default function ChatWindow() {
           <div className="h-full flex flex-col items-center justify-center gap-6 ">
             <div className="flex flex-col items-center gap-3">
               <div className="w-14 h-14 rounded-2xl bg-surface border border-border flex items-center justify-center">
-                <Sparkles className="text-[#38BDF8]" size={26} />
+                <Sparkles className="text-accent" size={26} />
               </div>
               <p className="text-center text-slate-100 text-xl font-semibold tracking-tight">
-                Hi, I'm <span className="text-[#38BDF8]">ELIARA</span>
+                Hi, I'm <span className="text-accent">ELIARA</span>
               </p>
               <p className="text-center text-slate-400 text-sm max-w-xs">
                 Ask about your data and get instant insights.
@@ -351,7 +351,7 @@ export default function ChatWindow() {
                 <button
                   key={s}
                   onClick={() => sendMessage(s)}
-                  className="text-sm text-slate-300 bg-surface border border-border rounded-full px-4 py-2 hover:border-[#38BDF8] hover:text-white transition-colors cursor-pointer"
+                  className="text-sm text-slate-300 bg-surface border border-border rounded-full px-4 py-2 hover:border-accent hover:text-white transition-colors cursor-pointer"
                 >
                   {s}
                 </button>
@@ -373,16 +373,16 @@ export default function ChatWindow() {
           {loading && (
             <div className="flex justify-start">
               <div className="flex items-center gap-1.5 px-4 py-3 rounded-2xl rounded-bl-sm bg-surface border border-border">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8] animate-bounce [animation-delay:-0.3s]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8] animate-bounce [animation-delay:-0.15s]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8] animate-bounce" />
+                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce [animation-delay:-0.3s]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce [animation-delay:-0.15s]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" />
               </div>
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
-        <div className=" flex gap-2 items-end bg-surface border border-border rounded-2xl p-2 focus-within:border-[#38BDF8] transition-colors">
+        <div className=" flex gap-2 items-end bg-surface border border-border rounded-2xl p-2 focus-within:border-accent transition-colors">
           <textarea
             ref={textareaRef}
             rows={1}
@@ -399,7 +399,7 @@ export default function ChatWindow() {
             placeholder="Ask about your data..."
           />
           <button
-            className="shrink-0 bg-[#38BDF8] hover:bg-[#0EA5E9] disabled:opacity-40 disabled:cursor-not-allowed text-background font-semibold p-2.5 rounded-xl transition-colors cursor-pointer"
+            className="shrink-0 bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed text-background font-semibold p-2.5 rounded-xl transition-colors cursor-pointer"
             onClick={handleSend}
             disabled={!loading && !input.trim()}
             aria-label={loading ? "Stop response" : "Send message"}

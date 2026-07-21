@@ -14,7 +14,7 @@ export default function Clarification({ data, onSelect }: ClarificationProps) {
         {data.options.map((opt) => (
           <button
             key={opt}
-            className="bg-surface border border-border hover:border-[#38BDF8] hover:text-white text-slate-200 px-4 py-2 rounded-xl transition-colors cursor-pointer"
+            className="bg-surface border border-border hover:border-accent hover:text-white text-slate-200 px-4 py-2 rounded-xl transition-colors cursor-pointer"
             onClick={() => onSelect(opt)}
           >
             {opt}
