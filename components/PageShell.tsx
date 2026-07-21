@@ -12,6 +12,7 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
   const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
   useEffect(() => {
+    if (isPending || !session) return;
     const loadThreads = async () => {
       setThreadsLoaded(false);
       const res = await fetch(`/api/threads`);
@@ -22,10 +23,13 @@ export default function PageShell({ children }: { children: React.ReactNode }) {
       // setActiveThread(data.length > 0 ? data[0].id : null);
     };
     loadThreads();
-  }, [setThreads]);
-  if (!session && !isPending) {
-    router.push("/login");
-  }
+  }, [session, isPending, setThreads]);
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.replace("/login");
+    }
+  }, [session, isPending, router]);
+
   return (
     <div className="flex h-screen">
       <Suspense fallback={<div>Loading...</div>}>

@@ -13,17 +13,11 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import {
-  AlertCircle,
-  AlertTriangle,
-  BarChart3,
-  CheckCircle2,
-  Clock,
-  TrendingUp,
-  X,
-} from "lucide-react";
+import { Clock } from "lucide-react";
 import DailyBrief from "@/components/DailyBrief";
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444"];
+
+const CHART_COLORS = ["#38BDF8", "#818CF8", "#F59E0B", "#34D399", "#F87171"];
+
 const customerExposureData = [
   { name: "ZAATRE EXPRESS LTD", amount: 58000 },
   { name: "YEDDER CO FOR IMPORT", amount: 56000 },
@@ -38,10 +32,10 @@ const customerExposureData = [
 ];
 
 const agingData = [
-  { name: "0-30", value: 38.7, color: "#052f4a" },
-  { name: "90+", value: 35.1, color: "#1e40af" },
-  { name: "31-60", value: 19.6, color: "#BA3636" },
-  { name: "61-90", value: 6.54, color: "#966262" },
+  { name: "0-30", value: 38.7, color: CHART_COLORS[0] },
+  { name: "90+", value: 35.1, color: CHART_COLORS[4] },
+  { name: "31-60", value: 19.6, color: CHART_COLORS[2] },
+  { name: "61-90", value: 6.54, color: CHART_COLORS[1] },
 ];
 
 const supplierCountriesData = [
@@ -75,20 +69,29 @@ const formatCurrency = (value: number) => {
   }
   return value.toString();
 };
+
+const tooltipStyle = {
+  backgroundColor: "#111827",
+  border: "1px solid #1E293B",
+  borderRadius: "8px",
+  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.3)",
+  color: "#F1F5F9",
+};
+
 export default function Home() {
   const [showBrief, setShowBrief] = useState(true);
 
   return (
-    <div className="size-full overflow-auto">
-      <div className=" mx-auto p-8">
+    <div className="size-full overflow-auto bg-background">
+      <div className="max-w-7xl mx-auto p-8">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-semibold text-sky-100">
+          <h1 className="text-2xl font-semibold text-slate-100">
             Business Analytics Dashboard
           </h1>
           <div className="flex gap-3">
             <button
               onClick={() => setShowBrief(true)}
-              className="px-4 py-2 bg-sky-900 text-white rounded-lg hover:bg-sky-900/80 transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-accent text-background rounded-lg hover:bg-accent-hover transition-colors flex items-center gap-2 font-medium cursor-pointer"
             >
               <Clock className="w-4 h-4" />
               Morning Brief
@@ -96,269 +99,241 @@ export default function Home() {
           </div>
         </div>
 
-        <>
-          {/* Morning Operations Brief Overlay */}
-          {showBrief && <DailyBrief setShowBrief={setShowBrief} />}
+        {showBrief && <DailyBrief setShowBrief={setShowBrief} />}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Top Customer Exposure */}
-            <div className="bg-sky-100 rounded-2xl shadow-lg p-3 border border-slate-200">
-              <h2 className="mb-4">Top Customer Exposure</h2>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart
-                  data={customerExposureData}
-                  layout="vertical"
-                  margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
-                >
-                  <defs>
-                    <linearGradient
-                      id="customerGradient"
-                      x1="0"
-                      y1="0"
-                      x2="1"
-                      y2="0"
-                    >
-                      <stop offset="0%" stopColor="#1e40af" stopOpacity={0.8} />
-                      <stop offset="100%" stopColor="#052f4a" stopOpacity={1} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis
-                    type="number"
-                    stroke="#64748b"
-                    tick={{ fontSize: 12 }}
-                    tickFormatter={formatCurrency}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    width={180}
-                    stroke="#64748b"
-                    tick={{ fontSize: 11 }}
-                  />
-                  <Tooltip
-                    formatter={(value) =>
-                      typeof value === "number"
-                        ? `$${value.toLocaleString()}`
-                        : ""
-                    }
-                    contentStyle={{
-                      backgroundColor: "rgba(255, 255, 255, 0.8)",
-                      border: "1px solid #052f4a",
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                    }}
-                  />
-                  <Bar
-                    dataKey="amount"
-                    fill="url(#customerGradient)"
-                    radius={[0, 8, 8, 0]}
-                    label={{
-                      position: "right",
-                      fill: "#1e293b",
-                      fontSize: 12,
-                      formatter: (value: unknown) =>
-                        typeof value === "number" ? formatCurrency(value) : "",
-                    }}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Accounts Receivable Aging */}
-            <div className="bg-sky-100 rounded-2xl shadow-lg p-3 border border-slate-200">
-              <h2 className="mb-4">Accounts Receivable Aging</h2>
-              <ResponsiveContainer width="100%" height={400}>
-                <PieChart>
-                  <defs>
-                    {agingData.map((entry, index) => (
-                      <linearGradient
-                        key={index}
-                        id={`gradient-${index}`}
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="0%"
-                          stopColor={entry.color}
-                          stopOpacity={1}
-                        />
-                        <stop
-                          offset="100%"
-                          stopColor={entry.color}
-                          stopOpacity={0.8}
-                        />
-                      </linearGradient>
-                    ))}
-                  </defs>
-                  <Pie
-                    data={agingData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={(entry: any) =>
-                      `${entry.name}: ${(entry.percent * 100).toFixed(1)}%`
-                    }
-                    outerRadius={120}
-                    innerRadius={60}
-                    fill="#8884d8"
-                    dataKey="value"
-                    paddingAngle={2}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-surface rounded-2xl shadow-lg p-4 border border-border">
+            <h2 className="mb-4 text-slate-100 font-semibold">
+              Top Customer Exposure
+            </h2>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
+                data={customerExposureData}
+                layout="vertical"
+                margin={{ left: 10, right: 30, top: 10, bottom: 10 }}
+              >
+                <defs>
+                  <linearGradient
+                    id="customerGradient"
+                    x1="0"
+                    y1="0"
+                    x2="1"
+                    y2="0"
                   >
-                    {agingData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={`url(#gradient-${index})`}
-                        stroke="#fff"
-                        strokeWidth={2}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    // Recharts may pass non-number value types; accept any and handle at runtime
-                    formatter={(value: any) =>
-                      typeof value === "number"
-                        ? `${value.toFixed(1)}%`
-                        : (value ?? "N/A")
-                    }
-                    contentStyle={{
-                      backgroundColor: "rgba(255, 255, 255, 0.5)",
-                      border: "1px solid #052f4a",
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                    }}
-                  />
-                  <Legend
-                    verticalAlign="bottom"
-                    height={36}
-                    iconType="circle"
-                    formatter={(value, entry: any) =>
-                      `${value} (${entry.payload.value.toFixed(1)}%)`
-                    }
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Top Supplier Countries */}
-            <div className="bg-sky-100 rounded-2xl shadow-lg p-3 border border-slate-200">
-              <h2 className="mb-4">Top Supplier Countries</h2>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart
-                  data={supplierCountriesData}
-                  margin={{ top: 20, right: 20, left: 20, bottom: 60 }}
-                >
-                  <defs>
-                    <linearGradient
-                      id="supplierGradient"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="0%" stopColor="#052f4a" stopOpacity={1} />
-                      <stop
-                        offset="100%"
-                        stopColor="#1e40af"
-                        stopOpacity={0.8}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis
-                    dataKey="country"
-                    stroke="#64748b"
-                    angle={-45}
-                    textAnchor="end"
-                    height={30}
-                    tick={{ fontSize: 11 }}
-                  />
-                  <YAxis stroke="#64748b" tick={{ fontSize: 12 }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "rgba(255, 255, 255, 0.5)",
-                      border: "1px solid #052f4a",
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                    }}
-                  />
-                  <Bar
-                    dataKey="count"
-                    fill="url(#supplierGradient)"
-                    radius={[8, 8, 0, 0]}
-                    label={{ position: "top", fill: "#052f4a", fontSize: 12 }}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Overdue Days Distribution */}
-            <div className="bg-sky-100 rounded-2xl shadow-lg p-3 border border-slate-200">
-              <h2 className="mb-4">Overdue Days Distribution</h2>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart
-                  data={overdueData}
-                  margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
-                >
-                  <defs>
-                    <linearGradient
-                      id="overdueGradient"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="0%" stopColor="#052f4a" stopOpacity={1} />
-                      <stop
-                        offset="100%"
-                        stopColor="#1e40af"
-                        stopOpacity={0.8}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis
-                    dataKey="days"
-                    stroke="#64748b"
-                    tick={{ fontSize: 12 }}
-                    label={{
-                      value: "Days Overdue",
-                      position: "insideBottom",
-                      offset: -10,
-                      fill: "#475569",
-                    }}
-                  />
-                  <YAxis
-                    stroke="#64748b"
-                    tick={{ fontSize: 12 }}
-                    label={{
-                      value: "Count",
-                      angle: -90,
-                      position: "insideLeft",
-                      fill: "#475569",
-                    }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "rgba(255, 255, 255, 0.5)",
-                      border: "1px solid #052f4a",
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                    }}
-                  />
-                  <Bar
-                    dataKey="count"
-                    fill="url(#overdueGradient)"
-                    radius={[8, 8, 0, 0]}
-                    label={{ position: "top", fill: "#052f4a", fontSize: 12 }}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+                    <stop offset="0%" stopColor="#0EA5E9" stopOpacity={0.85} />
+                    <stop offset="100%" stopColor="#38BDF8" stopOpacity={1} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
+                <XAxis
+                  type="number"
+                  stroke="#94A3B8"
+                  tick={{ fontSize: 12, fill: "#94A3B8" }}
+                  tickFormatter={formatCurrency}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  width={180}
+                  stroke="#94A3B8"
+                  tick={{ fontSize: 11, fill: "#94A3B8" }}
+                />
+                <Tooltip
+                  formatter={(value) =>
+                    typeof value === "number"
+                      ? `$${value.toLocaleString()}`
+                      : ""
+                  }
+                  contentStyle={tooltipStyle}
+                />
+                <Bar
+                  dataKey="amount"
+                  fill="url(#customerGradient)"
+                  radius={[0, 8, 8, 0]}
+                  label={{
+                    position: "right",
+                    fill: "#94A3B8",
+                    fontSize: 12,
+                    formatter: (value: unknown) =>
+                      typeof value === "number" ? formatCurrency(value) : "",
+                  }}
+                />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-        </>
+
+          <div className="bg-surface rounded-2xl shadow-lg p-4 border border-border">
+            <h2 className="mb-4 text-slate-100 font-semibold">
+              Accounts Receivable Aging
+            </h2>
+            <ResponsiveContainer width="100%" height={400}>
+              <PieChart>
+                <defs>
+                  {agingData.map((entry, index) => (
+                    <linearGradient
+                      key={index}
+                      id={`gradient-${index}`}
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="0%"
+                        stopColor={entry.color}
+                        stopOpacity={1}
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor={entry.color}
+                        stopOpacity={0.75}
+                      />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <Pie
+                  data={agingData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={(entry: any) =>
+                    `${entry.name}: ${(entry.percent * 100).toFixed(1)}%`
+                  }
+                  outerRadius={120}
+                  innerRadius={60}
+                  dataKey="value"
+                  paddingAngle={2}
+                >
+                  {agingData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={`url(#gradient-${index})`}
+                      stroke="#0B1120"
+                      strokeWidth={2}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: any) =>
+                    typeof value === "number"
+                      ? `${value.toFixed(1)}%`
+                      : (value ?? "N/A")
+                  }
+                  contentStyle={tooltipStyle}
+                />
+                <Legend
+                  verticalAlign="bottom"
+                  height={36}
+                  iconType="circle"
+                  formatter={(value, entry: any) => (
+                    <span className="text-slate-300">
+                      {value} ({entry.payload.value.toFixed(1)}%)
+                    </span>
+                  )}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-surface rounded-2xl shadow-lg p-4 border border-border">
+            <h2 className="mb-4 text-slate-100 font-semibold">
+              Top Supplier Countries
+            </h2>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
+                data={supplierCountriesData}
+                margin={{ top: 20, right: 20, left: 20, bottom: 60 }}
+              >
+                <defs>
+                  <linearGradient
+                    id="supplierGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="0%" stopColor="#38BDF8" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#0EA5E9" stopOpacity={0.8} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
+                <XAxis
+                  dataKey="country"
+                  stroke="#94A3B8"
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                  tick={{ fontSize: 11, fill: "#94A3B8" }}
+                />
+                <YAxis
+                  stroke="#94A3B8"
+                  tick={{ fontSize: 12, fill: "#94A3B8" }}
+                />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Bar
+                  dataKey="count"
+                  fill="url(#supplierGradient)"
+                  radius={[8, 8, 0, 0]}
+                  label={{ position: "top", fill: "#94A3B8", fontSize: 12 }}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-surface rounded-2xl shadow-lg p-4 border border-border">
+            <h2 className="mb-4 text-slate-100 font-semibold">
+              Overdue Days Distribution
+            </h2>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
+                data={overdueData}
+                margin={{ top: 20, right: 20, left: 20, bottom: 40 }}
+              >
+                <defs>
+                  <linearGradient
+                    id="overdueGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="0%" stopColor="#38BDF8" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#0EA5E9" stopOpacity={0.8} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
+                <XAxis
+                  dataKey="days"
+                  stroke="#94A3B8"
+                  tick={{ fontSize: 12, fill: "#94A3B8" }}
+                  label={{
+                    value: "Days Overdue",
+                    position: "insideBottom",
+                    offset: -15,
+                    fill: "#94A3B8",
+                  }}
+                />
+                <YAxis
+                  stroke="#94A3B8"
+                  tick={{ fontSize: 12, fill: "#94A3B8" }}
+                  label={{
+                    value: "Count",
+                    angle: -90,
+                    position: "insideLeft",
+                    fill: "#94A3B8",
+                  }}
+                />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Bar
+                  dataKey="count"
+                  fill="url(#overdueGradient)"
+                  radius={[8, 8, 0, 0]}
+                  label={{ position: "top", fill: "#94A3B8", fontSize: 12 }}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
     </div>
   );

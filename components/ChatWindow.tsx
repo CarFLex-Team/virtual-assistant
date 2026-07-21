@@ -42,7 +42,6 @@ export default function ChatWindow() {
     return () => clearTimeout(timer);
   }, [threads, pendingThreads, activeThread]);
 
-  // Single source of truth for textarea auto-grow (fixes the old maxHeight:200 vs max-h-20 conflict)
   const TEXTAREA_MAX_HEIGHT = 160;
   useEffect(() => {
     const el = textareaRef.current;
