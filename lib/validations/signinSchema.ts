@@ -6,7 +6,10 @@ export const signinSchema = z.object({
     .min(1, "Email is required")
     .toLowerCase()
     .refine((email) => email.includes("@"), "Invalid email format"),
-  password: z.string(),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .max(100, "Password must be less than 100 characters"),
 });
 
 export type SigninFormData = z.infer<typeof signinSchema>;

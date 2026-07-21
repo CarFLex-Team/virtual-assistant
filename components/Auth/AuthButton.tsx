@@ -4,18 +4,22 @@ export default function AuthButton({
   children,
   onClick,
   disabled,
+  type = "submit",
 }: {
   className?: string;
   children?: React.ReactNode;
   onClick?: () => void;
   disabled?: boolean;
+  type?: "submit" | "button";
 }) {
   return (
     <button
-      type="submit"
+      type={type}
       disabled={disabled}
       onClick={onClick}
-      className={`  text-gray-200  cursor-pointer shadow-md px-2.5 py-0.5 rounded-md  w-fit sm:text-base  transition-colors duration-200 ${className}`}
+      className={`shadow-md rounded-md w-fit sm:text-base transition-colors duration-200 disabled:cursor-not-allowed ${
+        disabled ? "" : "cursor-pointer"
+      } ${className}`}
     >
       {children}
     </button>

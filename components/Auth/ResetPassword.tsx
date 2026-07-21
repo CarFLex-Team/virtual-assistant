@@ -7,11 +7,12 @@ import AuthButton from "@/components/Auth/AuthButton";
 import { resetPassword } from "@/lib/auth/auth-client";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-// import AnimatedLogo from "@/components/AnimatedLogo";
+
 import {
   ResetPassFormData,
   resetPassSchema,
 } from "@/lib/validations/resetSchema";
+import { Sparkles } from "lucide-react";
 
 export default function ResetPassword() {
   const router = useRouter();
@@ -45,17 +46,21 @@ export default function ResetPassword() {
   };
 
   return token ? (
-    <div className="flex min-h-screen items-center justify-center bg-brand-dark p-4">
-      <div className="w-full max-w-md rounded-2xl bg-brand-dark p-8 shadow-xl border border-gray-200">
-        {/* <div className="mb-4 flex justify-center">
-          <AnimatedLogo size={2} />
-        </div> */}
-
-        <h1 className="mb-4 text-center text-2xl font-semibold text-gray-100">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md rounded-2xl bg-surface p-8 shadow-xl border border-border">
+        <div className="mb-4 flex justify-center  items-center">
+          <div className=" rounded-2xl bg-surface border border-border p-4 flex items-center justify-center gap-2">
+            <Sparkles className="text-accent" size={26} />
+            <p className="text-slate-100 font-semibold text-2xl tracking-tight">
+              ELIARA
+            </p>
+          </div>
+        </div>
+        <h1 className="mb-4 text-center text-2xl font-semibold text-slate-100">
           Reset Password
         </h1>
 
-        <form className="">
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className=" relative mb-4">
             <FormInput
               label="Password"
@@ -73,13 +78,12 @@ export default function ResetPassword() {
             </button>
           </div>
 
-          {/* Auth error */}
-          {authError && <p className="text-sm text-brand-red">{authError}</p>}
+          {authError && (
+            <p className="text-sm text-red-400 mb-3">{authError}</p>
+          )}
           <AuthButton
-            // type="submit"
-            className="w-full bg-brand-red text-white py-2 rounded-lg hover:bg-brand-red/80 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={isSubmitting || loading}
-            onClick={handleSubmit(onSubmit)}
+            className="w-full bg-accent text-background py-2 rounded-lg hover:bg-accent-hover transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            disabled={isSubmitting}
           >
             {isSubmitting ? "Processing..." : "Reset Password"}
           </AuthButton>
@@ -87,11 +91,16 @@ export default function ResetPassword() {
       </div>
     </div>
   ) : (
-    <div className="flex min-h-screen items-center justify-center bg-brand-dark p-4">
-      <div className="w-full max-w-md rounded-2xl bg-brand-dark p-8 shadow-xl border border-gray-200">
-        {/* <div className="mb-4 flex justify-center">
-          <AnimatedLogo size={2} />
-        </div> */}
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="mb-4 flex justify-center  items-center">
+          <div className=" rounded-2xl bg-surface border border-border p-4 flex items-center justify-center gap-2">
+            <Sparkles className="text-accent" size={26} />
+            <p className="text-slate-100 font-semibold text-2xl tracking-tight">
+              ELIARA
+            </p>
+          </div>
+        </div>
         <p className="text-center text-gray-300">
           Invalid or expired reset token.
         </p>

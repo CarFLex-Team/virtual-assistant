@@ -8,6 +8,7 @@ import { ResetFormData, resetSchema } from "@/lib/validations/resetSchema";
 import { requestPasswordReset } from "@/lib/auth/auth-client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Sparkles } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const [authError, setAuthError] = useState<string | null>(null);
@@ -39,13 +40,18 @@ export default function ForgotPasswordPage() {
     }
   };
   return sent ? (
-    <div className="flex min-h-screen items-center justify-center bg-brand-dark p-4">
-      <div className="w-full max-w-md rounded-2xl bg-brand-dark p-8 shadow-xl border border-gray-200">
-        {/* <div className="mb-4 flex justify-center">
-          <AnimatedLogo size={2} />
-        </div> */}
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md rounded-2xl bg-surface p-8 shadow-xl border border-border">
+        <div className="mb-4 flex justify-center  items-center">
+          <div className=" rounded-2xl bg-surface border border-border p-4 flex items-center justify-center gap-2">
+            <Sparkles className="text-accent" size={26} />
+            <p className="text-slate-100 font-semibold text-2xl tracking-tight">
+              ELIARA
+            </p>
+          </div>
+        </div>
 
-        <h1 className="mb-4 text-center text-2xl font-semibold text-gray-100">
+        <h1 className="mb-4 text-center text-2xl font-semibold text-slate-100">
           Forgot Password
         </h1>
         <p className="text-center text-gray-400">
@@ -56,17 +62,22 @@ export default function ForgotPasswordPage() {
     </div>
   ) : (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md rounded-2xl bg-background p-8 shadow-xl border border-gray-200">
-        {/* <div className="mb-4 flex justify-center">
-          <AnimatedLogo size={2} />
-        </div> */}
+      <div className="w-full max-w-md rounded-2xl bg-surface p-8 shadow-xl border border-border">
+        <div className="mb-4 flex justify-center  items-center">
+          <div className=" rounded-2xl bg-surface border border-border p-4 flex items-center justify-center gap-2">
+            <Sparkles className="text-accent" size={26} />
+            <p className="text-slate-100 font-semibold text-2xl tracking-tight">
+              ELIARA
+            </p>
+          </div>
+        </div>
 
-        <h1 className="mb-4 text-center text-2xl font-semibold text-gray-100">
+        <h1 className="mb-4 text-center text-2xl font-semibold text-slate-100">
           Forgot Password
         </h1>
 
-        <form className="">
-          <div className=" space-y-3 mb-4">
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="mb-3">
             <FormInput
               label="Email"
               type="email"
@@ -76,14 +87,14 @@ export default function ForgotPasswordPage() {
             />
           </div>
 
-          {authError && <p className="text-sm text-red-400">{authError}</p>}
+          {authError && (
+            <p className="text-sm text-red-400 mb-3">{authError}</p>
+          )}
           <AuthButton
-            // type="submit"
-            className="w-full bg-sky-900 text-white py-2 rounded-lg hover:bg-sky-900/80 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={isSubmitting || loading}
-            onClick={handleSubmit(onSubmit)}
+            className="w-full bg-accent text-background py-2 rounded-lg hover:bg-accent-hover transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            disabled={isSubmitting}
           >
-            {isSubmitting || loading ? "Sending..." : "Send Reset Link"}
+            {isSubmitting ? "Sending..." : "Send Reset Link"}
           </AuthButton>
         </form>
       </div>
