@@ -19,8 +19,14 @@ export default function TableView({ data }: TableViewProps) {
         <thead className="bg-surface">
           <tr>
             {data.columns?.map((col) => (
-              <th key={col} className="px-4 py-2 text-slate-100 font-semibold">
-                {col}
+              <th
+                key={col}
+                className="px-4 py-2 text-slate-100 font-semibold text-sm"
+              >
+                {col
+                  .split("_")
+                  .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+                  .join(" ")}
               </th>
             ))}
           </tr>

@@ -4,7 +4,7 @@ import { Menu } from "lucide-react";
 export default function TopNav({ onMenuClick }: { onMenuClick: () => void }) {
   return (
     <nav
-      className="h-[5vh] px-6 sm:px-9 bg-background"
+      className="h-[8vh] px-6 sm:px-9 bg-background"
       aria-label="Main navigation"
     >
       <div className="flex justify-between items-center h-full border-b border-border">
