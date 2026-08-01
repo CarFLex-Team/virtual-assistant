@@ -15,6 +15,7 @@ export const fetchAIResponse = async (
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
+  console.log("AI response:", json);
   return json;
 };
 //   return {

@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowUp, Square, Sparkles } from "lucide-react";
 import Message from "./MessageBubble";
 import ErrorBubble from "./ErrorBubble";
-import { fetchAIResponse } from "@/utils/api";
+import StreamingMessage from "./StreamingMessage";
+import { streamAIResponse } from "@/utils/StreamApi";
 import { useThreadStore, Thread, ChatMessage } from "@/store/threadStore";
 import { formatChatDate } from "@/utils/formatChatDate";
 
@@ -13,12 +14,7 @@ const SUGGESTIONS = [
   "Top inventory risks right now",
 ];
 
-const LOADING_STAGES = [
-  "Reading your question...",
-  "Querying your data...",
-  "Running the numbers...",
-  "Putting together an answer...",
-];
+const DEFAULT_STAGE = "Thinking...";
 
 export default function ChatWindow() {
   const {
@@ -31,27 +27,16 @@ export default function ChatWindow() {
   } = useThreadStore();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [loadingStage, setLoadingStage] = useState(0);
+  const [liveStage, setLiveStage] = useState(DEFAULT_STAGE);
   const controllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const streamTokensRef = useRef<Map<number, string[]>>(new Map());
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [threads, activeThread, pendingThreads]);
-
-  useEffect(() => {
-    if (!loading) {
-      setLoadingStage(0);
-      return;
-    }
-    const interval = setInterval(() => {
-      setLoadingStage((s) =>
-        s + 1 > LOADING_STAGES.length - 1 ? LOADING_STAGES.length - 1 : s + 1,
-      );
-    }, 1800);
-    return () => clearInterval(interval);
-  }, [loading]);
 
   useEffect(() => {
     const currentThread = getCurrentThread();
@@ -154,6 +139,22 @@ export default function ChatWindow() {
     return threads.find((t) => t.id === activeThread) || null;
   };
 
+  const syncCurrentThread = (currentThread: Thread) => {
+    if (pendingThreads?.some((t) => t.id === currentThread.id)) {
+      setPendingThreads(
+        pendingThreads.map((t) =>
+          t.id === currentThread.id ? { ...currentThread } : t,
+        ),
+      );
+    } else {
+      setThreads(
+        threads.map((t) =>
+          t.id === currentThread.id ? { ...currentThread } : t,
+        ),
+      );
+    }
+  };
+
   const sendMessage = async (content: string) => {
     if (!content.trim()) return;
     controllerRef.current = new AbortController();
@@ -204,97 +205,75 @@ export default function ChatWindow() {
 
     currentThread?.chat_messages.push(userMessage);
     currentThread?.buffer.push(userMessage);
-
-    if (pendingThreads?.some((t) => t.id === currentThread?.id)) {
-      setPendingThreads(
-        pendingThreads.map((t) =>
-          t.id === currentThread?.id ? { ...currentThread } : t,
-        ),
-      );
-    } else {
-      setThreads(
-        threads.map((t) => (t.id === currentThread!.id ? currentThread! : t)),
-      );
-    }
-
     setInput("");
+    if (currentThread) syncCurrentThread(currentThread);
 
-    if (pendingThreads?.some((t) => t.id === currentThread?.id)) {
-      setPendingThreads(
-        pendingThreads.map((t) =>
-          t.id === currentThread?.id ? { ...currentThread } : t,
-        ),
-      );
-    } else {
-      setThreads(
-        threads.map((t) => (t.id === currentThread?.id ? currentThread : t)),
-      );
-    }
+    if (!currentThread) return;
 
-    try {
-      setLoading(true);
-      const aiData = await fetchAIResponse(content, {
-        signal: controllerRef.current?.signal,
-      });
-      let aiMessage: ChatMessage;
-      if (!aiData || aiData.status === "error") {
-        aiMessage = {
-          id: Date.now() + 1,
+    const aiMessage: ChatMessage = {
+      id: Date.now() + 2,
+      type: "bot",
+      content: "",
+      visual: null,
+      timestamp: new Date().toISOString(),
+    };
+    currentThread.chat_messages.push(aiMessage);
+    currentThread.buffer.push(aiMessage);
+    streamTokensRef.current.set(aiMessage.id, []);
+
+    setLoading(true);
+    setLiveStage(DEFAULT_STAGE);
+
+    await streamAIResponse(content, {
+      signal: controllerRef.current?.signal,
+
+      onStage: (stage) => {
+        setLiveStage(stage);
+      },
+
+      onToken: (token) => {
+        aiMessage.content = (aiMessage.content as string) + token;
+        const tokens = streamTokensRef.current.get(aiMessage.id) || [];
+        tokens.push(token);
+        streamTokensRef.current.set(aiMessage.id, tokens);
+        syncCurrentThread(currentThread!);
+      },
+
+      onVisual: (visual) => {
+        aiMessage.visual = visual;
+        syncCurrentThread(currentThread!);
+      },
+
+      onDone: () => {
+        setLoading(false);
+        streamTokensRef.current.delete(aiMessage.id);
+        localStorage.setItem(
+          `messageBuffer ${currentThread!.id}`,
+          JSON.stringify(currentThread!.buffer),
+        );
+        syncCurrentThread(currentThread!);
+        if (currentThread!.buffer.length >= 5) {
+          flushMessagesToDB(currentThread!.id);
+        }
+      },
+
+      onError: (error) => {
+        setLoading(false);
+        streamTokensRef.current.delete(aiMessage.id);
+        const errorMessage: ChatMessage = {
+          id: Date.now() + 3,
           type: "error",
           content: {
-            code: aiData?.error?.code || "Unknown Error",
-            message:
-              aiData?.error?.message ||
-              "An error occurred while processing your request.",
+            code: error.code || "Error While Responding",
+            message: error.message,
           },
           timestamp: new Date().toISOString(),
         };
-      } else {
-        aiMessage = {
-          id: Date.now() + 2,
-          type: "bot",
-          content: aiData?.answer,
-          visual: aiData?.visual || null,
-          timestamp: new Date().toISOString(),
-        };
-      }
-
-      currentThread?.chat_messages.push(aiMessage);
-      currentThread?.buffer.push(aiMessage);
-      localStorage.setItem(
-        `messageBuffer ${currentThread?.id}`,
-        JSON.stringify(currentThread?.buffer),
-      );
-      if (pendingThreads?.some((t) => t.id === currentThread?.id)) {
-        setPendingThreads(
-          pendingThreads.map((t) =>
-            t.id === currentThread?.id ? { ...currentThread } : t,
-          ),
-        );
-      } else {
-        setThreads(
-          threads.map((t) => (t.id === currentThread?.id ? currentThread : t)),
-        );
-      }
-    } catch (err) {
-      const errorMessage: ChatMessage = {
-        id: Date.now() + 3,
-        type: "error",
-        content: {
-          code: "Error While Responding",
-          message:
-            "An error occurred while fetching the AI response. Please try again.",
-        },
-        timestamp: new Date().toISOString(),
-      };
-      currentThread?.chat_messages.push(errorMessage);
-      currentThread?.buffer.push(errorMessage);
-    }
-    setLoading(false);
-
-    if (currentThread && currentThread?.buffer.length >= 5) {
-      flushMessagesToDB(currentThread?.id);
-    }
+        currentThread!.chat_messages.push(errorMessage);
+        currentThread!.buffer.push(errorMessage);
+        syncCurrentThread(currentThread!);
+      },
+    });
   };
 
   const handleSend = () => {
@@ -338,8 +317,15 @@ export default function ChatWindow() {
   const displayedMessages = currentThread ? currentThread.chat_messages : [];
   const showWelcome = currentThread && currentThread.chat_messages.length === 0;
 
+  const streamingMessage =
+    loading && displayedMessages[displayedMessages.length - 1]?.type === "bot"
+      ? displayedMessages[displayedMessages.length - 1]
+      : null;
+  const isAwaitingFirstToken =
+    loading && (!streamingMessage || streamingMessage.content === "");
+
   return (
-    <div className="h-[95vh] p-4 bg-background relative overflow-hidden">
+    <div className="h-[92vh] p-4 bg-background relative overflow-hidden">
       {displayedMessages.length <= 0 && (
         <div
           className="absolute inset-0 pointer-events-none opacity-[0.12]"
@@ -388,16 +374,31 @@ export default function ChatWindow() {
               </p>
             </div>
           )}
-          {displayedMessages.map((msg: ChatMessage) => (
-            <div
-              key={msg.id}
-              className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}
-            >
-              {renderMessage(msg)}
-            </div>
-          ))}
+          {displayedMessages.map((msg: ChatMessage, i) => {
+            const isStreamingPlaceholder =
+              loading &&
+              i === displayedMessages.length - 1 &&
+              msg.type === "bot";
 
-          {loading && (
+            if (isStreamingPlaceholder && msg.content === "") return null;
+
+            return (
+              <div
+                key={msg.id}
+                className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}
+              >
+                {isStreamingPlaceholder ? (
+                  <StreamingMessage
+                    tokens={streamTokensRef.current.get(msg.id) || []}
+                  />
+                ) : (
+                  renderMessage(msg)
+                )}
+              </div>
+            );
+          })}
+
+          {isAwaitingFirstToken && (
             <div className="flex justify-start">
               <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl rounded-bl-sm bg-surface border border-border">
                 <span className="flex gap-1">
@@ -405,12 +406,11 @@ export default function ChatWindow() {
                   <span className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce [animation-delay:-0.15s]" />
                   <span className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" />
                 </span>
-
                 <span
-                  key={loadingStage}
+                  key={liveStage}
                   className="text-sm text-slate-400 animate-[fadeIn_0.3s_ease-in]"
                 >
-                  {LOADING_STAGES[loadingStage]}
+                  {liveStage}
                 </span>
               </div>
             </div>
