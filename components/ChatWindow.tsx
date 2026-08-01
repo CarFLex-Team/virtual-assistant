@@ -13,6 +13,13 @@ const SUGGESTIONS = [
   "Top inventory risks right now",
 ];
 
+const LOADING_STAGES = [
+  "Reading your question...",
+  "Querying your data...",
+  "Running the numbers...",
+  "Putting together an answer...",
+];
+
 export default function ChatWindow() {
   const {
     threads,
@@ -24,6 +31,7 @@ export default function ChatWindow() {
   } = useThreadStore();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingStage, setLoadingStage] = useState(0);
   const controllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -31,6 +39,19 @@ export default function ChatWindow() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [threads, activeThread, pendingThreads]);
+
+  useEffect(() => {
+    if (!loading) {
+      setLoadingStage(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setLoadingStage((s) =>
+        s + 1 > LOADING_STAGES.length - 1 ? LOADING_STAGES.length - 1 : s + 1,
+      );
+    }, 1800);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   useEffect(() => {
     const currentThread = getCurrentThread();
@@ -378,10 +399,19 @@ export default function ChatWindow() {
 
           {loading && (
             <div className="flex justify-start">
-              <div className="flex items-center gap-1.5 px-4 py-3 rounded-2xl rounded-bl-sm bg-surface border border-border">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce [animation-delay:-0.3s]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce [animation-delay:-0.15s]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" />
+              <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl rounded-bl-sm bg-surface border border-border">
+                <span className="flex gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce [animation-delay:-0.3s]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce [animation-delay:-0.15s]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" />
+                </span>
+
+                <span
+                  key={loadingStage}
+                  className="text-sm text-slate-400 animate-[fadeIn_0.3s_ease-in]"
+                >
+                  {LOADING_STAGES[loadingStage]}
+                </span>
               </div>
             </div>
           )}
