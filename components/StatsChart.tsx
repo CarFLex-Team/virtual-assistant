@@ -9,7 +9,7 @@ import {
 } from "recharts";
 
 interface ApiResponse {
-  points: {
+  trend: {
     label: string;
     value: number;
   }[];
@@ -20,7 +20,7 @@ interface StatsChartProps {
 }
 
 export default function StatsChart({ apiData }: StatsChartProps) {
-  const chartData = apiData.points.map((item) => ({
+  const chartData = apiData.trend.map((item) => ({
     name: item.label,
     value: item.value,
     fullDate: item.label,
@@ -41,6 +41,7 @@ export default function StatsChart({ apiData }: StatsChartProps) {
           <YAxis
             stroke="#94A3B8"
             tick={{ fill: "#94A3B8" }}
+            fontSize={12}
             allowDecimals={false}
           />
 
@@ -53,7 +54,7 @@ export default function StatsChart({ apiData }: StatsChartProps) {
             }}
             labelStyle={{ color: "#94A3B8" }}
             itemStyle={{ color: "#38BDF8" }}
-            formatter={(value) => [`${value} customers`, "Sales"]}
+            formatter={(value) => [`${value} `, "Value"]}
             labelFormatter={(label, payload) =>
               payload?.[0]?.payload?.fullDate || label
             }
