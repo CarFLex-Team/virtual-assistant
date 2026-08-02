@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -18,24 +18,51 @@ import DailyBrief from "@/components/DailyBrief";
 
 const CHART_COLORS = ["#38BDF8", "#818CF8", "#F59E0B", "#34D399", "#F87171"];
 
-const customerExposureData = [
-  { name: "ZAATRE EXPRESS LTD", amount: 58000 },
-  { name: "YEDDER ", amount: 56000 },
-  { name: "AWWDEH ", amount: 81000 },
-  { name: "SIXTY", amount: 85000 },
-  { name: "ROYAL ", amount: 92000 },
-  { name: "LUAY", amount: 120000 },
-  { name: "AL MASIABY ", amount: 140000 },
-  { name: "NAJEM ", amount: 210000 },
-  { name: "MRE ", amount: 230000 },
-  { name: "GOOD GOODS AUTOS", amount: 690000 },
+const TopSellingItems = [
+  {
+    name: "Item C BODY KIT BMW G12 2016-2020 LCI M LOOK ",
+    amount: 140300,
+  },
+  {
+    name: "Item C VPLKDSS001 ",
+    amount: 137765,
+  },
+  {
+    name: "Item 440-1915F-UE-DR ",
+    amount: 131952.9,
+  },
+  { name: "Item C 222 906 77 03/78 03-UPGRADE (BT) ", amount: 125512.66 },
+  {
+    name: "Item C BODY KIT JETOUR T2 2023-DEFENDER LOOK-CONVERSION ",
+    amount: 123134,
+  },
+  {
+    name: "Item C 205 906 64 04/65 04-UPGRADE 1",
+    amount: 113412.72,
+  },
+  {
+    name: "Item C 465 885 01 02-ASSY ",
+    amount: 102670,
+  },
+  {
+    name: "Item C 463 520 77 00/78 00-ELECTRIC",
+    amount: 100850,
+  },
+  {
+    name: "Item C BODY KIT RR SPORT 2013-2018 AUTOBIOGRAPHY LOOK ",
+    amount: 85200,
+  },
+  {
+    name: "Item C 167 698 47 01/48 01 ",
+    amount: 77485.52,
+  },
 ];
 
 const agingData = [
-  { name: "0-30", value: 38.7, color: CHART_COLORS[0] },
-  { name: "90+", value: 35.1, color: CHART_COLORS[4] },
-  { name: "31-60", value: 19.6, color: CHART_COLORS[2] },
-  { name: "61-90", value: 6.54, color: CHART_COLORS[1] },
+  { name: "0-30", value: 5183765.35, color: CHART_COLORS[0] },
+  { name: "31-90", value: 1772542.53, color: CHART_COLORS[2] },
+  { name: "180+", value: 1151575.55, color: CHART_COLORS[4] },
+  { name: "91-180", value: 1775363.03, color: CHART_COLORS[1] },
 ];
 
 const supplierCountriesData = [
@@ -80,7 +107,11 @@ const tooltipStyle = {
 
 export default function Home() {
   const [showBrief, setShowBrief] = useState(true);
-
+  const agingTotal = useMemo(() => {
+    return agingData.reduce((sum, item) => sum + item.value, 0);
+  }, []);
+  const truncateLabel = (label: string, maxLength = 10) =>
+    label.length > maxLength ? `${label.slice(0, maxLength)}…` : label;
   return (
     <div className="min-h-screen overflow-auto bg-background">
       <div className="max-w-7xl mx-auto p-8">
@@ -88,7 +119,7 @@ export default function Home() {
           <h1 className="text-2xl font-semibold text-slate-100">
             Business Analytics Dashboard
           </h1>
-          <div className="flex gap-3">
+          {/* <div className="flex gap-3">
             <button
               onClick={() => setShowBrief(true)}
               className="px-4 py-2 bg-accent text-background rounded-lg hover:bg-accent-hover transition-colors flex items-center gap-2 font-medium cursor-pointer"
@@ -96,19 +127,19 @@ export default function Home() {
               <Clock className="w-4 h-4" />
               Morning Brief
             </button>
-          </div>
+          </div> */}
         </div>
 
-        {showBrief && <DailyBrief setShowBrief={setShowBrief} />}
+        {/* {showBrief && <DailyBrief setShowBrief={setShowBrief} />} */}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-surface rounded-2xl shadow-lg p-4 border border-border">
             <h2 className="mb-4 text-slate-100 font-semibold">
-              Top Customer Exposure
+              Top Selling Items
             </h2>
             <ResponsiveContainer width="100%" height={400}>
               <BarChart
-                data={customerExposureData}
+                data={TopSellingItems}
                 layout="vertical"
                 margin={{ left: 10, right: 30, top: 10, bottom: 10 }}
               >
@@ -135,8 +166,10 @@ export default function Home() {
                   type="category"
                   dataKey="name"
                   // width={120}
+                  style={{ overflow: "hidden" }}
                   stroke="#94A3B8"
                   tick={{ fontSize: 11, fill: "#94A3B8" }}
+                  tickFormatter={(value) => truncateLabel(String(value))}
                 />
                 <Tooltip
                   cursor={{ fill: "#94A3B8", opacity: 0.1 }}
@@ -218,7 +251,7 @@ export default function Home() {
                   cursor={{ fill: "#94A3B8", opacity: 0.1 }}
                   formatter={(value: any) =>
                     typeof value === "number"
-                      ? `${value.toFixed(1)}%`
+                      ? `${value.toFixed(1)}`
                       : (value ?? "N/A")
                   }
                   contentStyle={tooltipStyle}
@@ -227,11 +260,16 @@ export default function Home() {
                   verticalAlign="bottom"
                   height={36}
                   iconType="circle"
-                  formatter={(value, entry: any) => (
-                    <span className="text-slate-300">
-                      {value} ({entry.payload.value.toFixed(1)}%)
-                    </span>
-                  )}
+                  formatter={(name) => {
+                    const item = agingData.find((item) => item.name === name);
+                    const percent = item ? (item.value / agingTotal) * 100 : 0;
+
+                    return (
+                      <span className="text-slate-300">
+                        {name} ({percent.toFixed(1)}%)
+                      </span>
+                    );
+                  }}
                 />
               </PieChart>
             </ResponsiveContainer>
