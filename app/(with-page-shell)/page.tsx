@@ -20,14 +20,14 @@ const CHART_COLORS = ["#38BDF8", "#818CF8", "#F59E0B", "#34D399", "#F87171"];
 
 const customerExposureData = [
   { name: "ZAATRE EXPRESS LTD", amount: 58000 },
-  { name: "YEDDER CO FOR IMPORT", amount: 56000 },
-  { name: "AWWDEH AUTO SPARE PARTS TR LLC SOLE PROPRIETORSHIP", amount: 81000 },
-  { name: "SIXTY THREE WORLD SPARE PARTS EST", amount: 85000 },
-  { name: "ROYAL ARROW AUTO NEW SPARE PARTS", amount: 92000 },
-  { name: "LUAY RASHEED TR. TOOLS MERCEDES", amount: 120000 },
-  { name: "AL MASIABY FOR TR. & MERCEDES PARTS", amount: 140000 },
-  { name: "NAJEM AL FURSAN AUTO SPARE PARTS ESTABLISHMENT", amount: 210000 },
-  { name: "MRE AUTO HOLDINGS PTY LTD T/A RENNEN AUTOTEILE", amount: 230000 },
+  { name: "YEDDER ", amount: 56000 },
+  { name: "AWWDEH ", amount: 81000 },
+  { name: "SIXTY", amount: 85000 },
+  { name: "ROYAL ", amount: 92000 },
+  { name: "LUAY", amount: 120000 },
+  { name: "AL MASIABY ", amount: 140000 },
+  { name: "NAJEM ", amount: 210000 },
+  { name: "MRE ", amount: 230000 },
   { name: "GOOD GOODS AUTOS", amount: 690000 },
 ];
 
@@ -82,7 +82,7 @@ export default function Home() {
   const [showBrief, setShowBrief] = useState(true);
 
   return (
-    <div className="size-full overflow-auto bg-background">
+    <div className="min-h-screen overflow-auto bg-background">
       <div className="max-w-7xl mx-auto p-8">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-semibold text-slate-100">
@@ -134,11 +134,12 @@ export default function Home() {
                 <YAxis
                   type="category"
                   dataKey="name"
-                  width={180}
+                  // width={120}
                   stroke="#94A3B8"
                   tick={{ fontSize: 11, fill: "#94A3B8" }}
                 />
                 <Tooltip
+                  cursor={{ fill: "#94A3B8", opacity: 0.1 }}
                   formatter={(value) =>
                     typeof value === "number"
                       ? `$${value.toLocaleString()}`
@@ -214,6 +215,7 @@ export default function Home() {
                   ))}
                 </Pie>
                 <Tooltip
+                  cursor={{ fill: "#94A3B8", opacity: 0.1 }}
                   formatter={(value: any) =>
                     typeof value === "number"
                       ? `${value.toFixed(1)}%`
@@ -269,7 +271,10 @@ export default function Home() {
                   stroke="#94A3B8"
                   tick={{ fontSize: 12, fill: "#94A3B8" }}
                 />
-                <Tooltip contentStyle={tooltipStyle} />
+                <Tooltip
+                  cursor={{ fill: "#94A3B8", opacity: 0.1 }}
+                  contentStyle={tooltipStyle}
+                />
                 <Bar
                   dataKey="count"
                   fill="url(#supplierGradient)"
@@ -323,7 +328,10 @@ export default function Home() {
                     fill: "#94A3B8",
                   }}
                 />
-                <Tooltip contentStyle={tooltipStyle} />
+                <Tooltip
+                  cursor={{ fill: "#94A3B8", opacity: 0.1 }}
+                  contentStyle={tooltipStyle}
+                />
                 <Bar
                   dataKey="count"
                   fill="url(#overdueGradient)"

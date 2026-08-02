@@ -6,17 +6,12 @@ import {
   TrendingUp,
   X,
 } from "lucide-react";
-
-// I'm using hardcoded data for now but this will eventually be replaced with
-// real API data from Mosap. NOTE: the previous placeholder values included
-
 const today = new Date().toLocaleDateString("en-US", {
   weekday: "long",
   day: "2-digit",
   month: "short",
   year: "numeric",
 });
-
 const SECTIONS = {
   success: {
     border: "border-l-emerald-500",
@@ -54,7 +49,6 @@ const SECTIONS = {
     heading: "text-teal-300",
   },
 };
-
 export default function DailyBrief({
   setShowBrief,
 }: {

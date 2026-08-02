@@ -28,6 +28,9 @@ export default function ChatWindow() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [liveStage, setLiveStage] = useState(DEFAULT_STAGE);
+  const [streamingThreadId, setStreamingThreadId] = useState<string | null>(
+    null,
+  );
   const controllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -35,8 +38,9 @@ export default function ChatWindow() {
   const streamTokensRef = useRef<Map<number, string[]>>(new Map());
 
   useEffect(() => {
+    if (streamingThreadId && streamingThreadId !== activeThread) return;
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [threads, activeThread, pendingThreads]);
+  }, [threads, activeThread, pendingThreads, streamingThreadId]);
 
   useEffect(() => {
     const currentThread = getCurrentThread();
@@ -222,6 +226,7 @@ export default function ChatWindow() {
     streamTokensRef.current.set(aiMessage.id, []);
 
     setLoading(true);
+    setStreamingThreadId(currentThread.id);
     setLiveStage(DEFAULT_STAGE);
 
     await streamAIResponse(content, {
@@ -246,6 +251,7 @@ export default function ChatWindow() {
 
       onDone: () => {
         setLoading(false);
+        setStreamingThreadId(null);
         streamTokensRef.current.delete(aiMessage.id);
         localStorage.setItem(
           `messageBuffer ${currentThread!.id}`,
@@ -259,6 +265,7 @@ export default function ChatWindow() {
 
       onError: (error) => {
         setLoading(false);
+        setStreamingThreadId(null);
         streamTokensRef.current.delete(aiMessage.id);
         const errorMessage: ChatMessage = {
           id: Date.now() + 3,
@@ -277,9 +284,10 @@ export default function ChatWindow() {
   };
 
   const handleSend = () => {
-    if (loading) {
+    if (loading && streamingThreadId === activeThread) {
       controllerRef.current?.abort();
       setLoading(false);
+      setStreamingThreadId(null);
       return;
     }
     if (!input.trim()) return;
@@ -317,12 +325,17 @@ export default function ChatWindow() {
   const displayedMessages = currentThread ? currentThread.chat_messages : [];
   const showWelcome = currentThread && currentThread.chat_messages.length === 0;
 
+  const isLoadingThisThread =
+    loading && streamingThreadId === currentThread?.id;
+
   const streamingMessage =
-    loading && displayedMessages[displayedMessages.length - 1]?.type === "bot"
+    isLoadingThisThread &&
+    displayedMessages[displayedMessages.length - 1]?.type === "bot"
       ? displayedMessages[displayedMessages.length - 1]
       : null;
   const isAwaitingFirstToken =
-    loading && (!streamingMessage || streamingMessage.content === "");
+    isLoadingThisThread &&
+    (!streamingMessage || streamingMessage.content === "");
 
   return (
     <div className="h-[92vh] p-4 bg-background relative overflow-hidden">
@@ -376,7 +389,7 @@ export default function ChatWindow() {
           )}
           {displayedMessages.map((msg: ChatMessage, i) => {
             const isStreamingPlaceholder =
-              loading &&
+              isLoadingThisThread &&
               i === displayedMessages.length - 1 &&
               msg.type === "bot";
 
@@ -437,10 +450,10 @@ export default function ChatWindow() {
           <button
             className="shrink-0 bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed text-background font-semibold p-2.5 rounded-xl transition-colors cursor-pointer"
             onClick={handleSend}
-            disabled={!loading && !input.trim()}
-            aria-label={loading ? "Stop response" : "Send message"}
+            disabled={!isLoadingThisThread && !input.trim()}
+            aria-label={isLoadingThisThread ? "Stop response" : "Send message"}
           >
-            {loading ? <Square size={18} /> : <ArrowUp size={18} />}
+            {isLoadingThisThread ? <Square size={18} /> : <ArrowUp size={18} />}
           </button>
         </div>
       </div>

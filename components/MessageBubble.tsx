@@ -1,5 +1,4 @@
 "use client";
-import ReactMarkdown from "react-markdown";
 import TableView from "./TableView";
 import { ChatMessage } from "@/store/threadStore";
 import StatsChart from "./StatsChart";
@@ -20,7 +19,6 @@ interface MessageProps {
 
 export default function MessageBubble({ message }: MessageProps) {
   const isUser = message.type === "user";
-
   const renderMessage = (msg: ChatMessage) => {
     switch (msg.visual?.type?.toLowerCase()) {
       case "trend":

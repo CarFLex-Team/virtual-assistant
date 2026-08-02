@@ -129,9 +129,8 @@ export default function StatisticsPage() {
 
   return (
     <div className="p-6 space-y-6 bg-background min-h-screen">
-      {/* Operational Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-linear-to-br from-sky-600 to-accent text-background rounded-xl p-5 shadow-lg">
+        <div className="bg-linear-to-br from-sky-700 to-sky-500 text-white rounded-xl p-5 shadow-lg">
           <div className="flex items-center justify-between mb-3">
             <div className="p-3 bg-black/15 rounded-lg">
               <DollarSign className="w-6 h-6" />
@@ -280,7 +279,10 @@ export default function StatisticsPage() {
                 stroke="#94A3B8"
                 tick={{ fontSize: 12, fill: "#94A3B8" }}
               />
-              <Tooltip contentStyle={tooltipStyle} />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                cursor={{ fill: "#94A3B8", opacity: 0.1 }}
+              />
               <Line
                 type="monotone"
                 dataKey="value"
@@ -321,7 +323,10 @@ export default function StatisticsPage() {
                 stroke="#94A3B8"
                 tick={{ fontSize: 12, fill: "#94A3B8" }}
               />
-              <Tooltip contentStyle={tooltipStyle} />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                cursor={{ fill: "#94A3B8", opacity: 0.1 }}
+              />
               <Bar
                 dataKey="count"
                 fill="url(#inventoryBarGradient)"
