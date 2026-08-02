@@ -198,7 +198,7 @@ export default function Home() {
 
           <div className="bg-surface rounded-2xl shadow-lg p-4 border border-border">
             <h2 className="mb-4 text-slate-100 font-semibold">
-              Accounts Receivable Aging
+              Inventory Aging
             </h2>
             <ResponsiveContainer width="100%" height={400}>
               <PieChart>
