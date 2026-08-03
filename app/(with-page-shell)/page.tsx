@@ -12,6 +12,8 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  LineChart,
+  Line,
 } from "recharts";
 import { Clock } from "lucide-react";
 import DailyBrief from "@/components/DailyBrief";
@@ -65,33 +67,24 @@ const agingData = [
   { name: "91-180", value: 1775363.03, color: CHART_COLORS[1] },
 ];
 
-const supplierCountriesData = [
-  { country: "United Arab Emir.", count: 162 },
-  { country: "China", count: 146 },
-  { country: "Taiwan, China", count: 14 },
-  { country: "Turkey", count: 4 },
-  { country: "Italy", count: 3 },
-  { country: "Germany", count: 2 },
-  { country: "Singapore", count: 1 },
-  { country: "Estonia", count: 1 },
-  { country: "Spain", count: 1 },
-  { country: "Romania", count: 1 },
+const inventoryPerWarehouse = [
+  { name: "Main - Main Warehouse", amount: 9748546.06 },
+  { name: "Claims - Claims Warehouse", amount: 112618.17 },
+  { name: "Damage - Damage Warehouse", amount: 22082.23 },
 ];
 
-const overdueData = [
-  { days: "0-50", count: 820 },
-  { days: "51-100", count: 45 },
-  { days: "101-200", count: 8 },
-  { days: "201-400", count: 3 },
-  { days: "401-600", count: 2 },
-  { days: "601-800", count: 1 },
-  { days: "801-1000", count: 1 },
-  { days: "1001-1200", count: 0 },
-  { days: "1201-1400", count: 1 },
+const salesData = [
+  { period: "2026-01", sales: 3019385.44, purchases: 2066780.22 },
+  { period: "2026-02", sales: 3583660.21, purchases: 1174193.18 },
+  { period: "2026-03", sales: 1864471.19, purchases: 1663000.15 },
+  { period: "2026-04", sales: 2629137.27, purchases: 1148266.52 },
+  { period: "2026-05", sales: 2102274.31, purchases: 380339.56 },
+  { period: "2026-06", sales: 2170407.34, purchases: 1079581.4 },
 ];
-
 const formatCurrency = (value: number) => {
-  if (value >= 1000) {
+  if (value >= 1000000) {
+    return `${(value / 1000000).toFixed(1)}M`;
+  } else if (value >= 1000) {
     return `${(value / 1000).toFixed(0)}k`;
   }
   return value.toString();
@@ -110,7 +103,7 @@ export default function Home() {
   const agingTotal = useMemo(() => {
     return agingData.reduce((sum, item) => sum + item.value, 0);
   }, []);
-  const truncateLabel = (label: string, maxLength = 10) =>
+  const truncateLabel = (label: string, maxLength = 23) =>
     label.length > maxLength ? `${label.slice(0, maxLength)}…` : label;
   return (
     <div className="min-h-screen overflow-auto bg-background">
@@ -140,62 +133,64 @@ export default function Home() {
             <ResponsiveContainer width="100%" height={400}>
               <BarChart
                 data={TopSellingItems}
-                layout="vertical"
-                margin={{ left: 10, right: 30, top: 10, bottom: 10 }}
+                margin={{ top: 20, right: 20, left: 20, bottom: 60 }}
               >
                 <defs>
                   <linearGradient
-                    id="customerGradient"
+                    id="supplierGradient"
                     x1="0"
                     y1="0"
-                    x2="1"
-                    y2="0"
+                    x2="0"
+                    y2="1"
                   >
-                    <stop offset="0%" stopColor="#0EA5E9" stopOpacity={0.85} />
-                    <stop offset="100%" stopColor="#38BDF8" stopOpacity={1} />
+                    <stop offset="0%" stopColor="#38BDF8" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#0EA5E9" stopOpacity={0.8} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
                 <XAxis
-                  type="number"
-                  stroke="#94A3B8"
-                  tick={{ fontSize: 12, fill: "#94A3B8" }}
-                  tickFormatter={formatCurrency}
-                />
-                <YAxis
                   type="category"
                   dataKey="name"
-                  // width={120}
                   style={{ overflow: "hidden" }}
                   stroke="#94A3B8"
-                  tick={{ fontSize: 11, fill: "#94A3B8" }}
                   tickFormatter={(value) => truncateLabel(String(value))}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                  tick={{ fontSize: 11, fill: "#94A3B8" }}
+                />
+                <YAxis
+                  type="number"
+                  stroke="#94A3B8"
+                  tickFormatter={formatCurrency}
+                  dataKey="amount"
+                  tick={{ fontSize: 12, fill: "#94A3B8" }}
                 />
                 <Tooltip
                   cursor={{ fill: "#94A3B8", opacity: 0.1 }}
                   formatter={(value) =>
                     typeof value === "number"
-                      ? `$${value.toLocaleString()}`
+                      ? `${value.toLocaleString()} AED`
                       : ""
                   }
                   contentStyle={tooltipStyle}
                 />
                 <Bar
                   dataKey="amount"
-                  fill="url(#customerGradient)"
-                  radius={[0, 8, 8, 0]}
                   label={{
-                    position: "right",
+                    position: "top",
                     fill: "#94A3B8",
                     fontSize: 12,
-                    formatter: (value: unknown) =>
+                    formatter: (value: any) =>
                       typeof value === "number" ? formatCurrency(value) : "",
                   }}
+                  fill="url(#supplierGradient)"
+                  radius={[8, 8, 0, 0]}
+                  // label={{ position: "top", fill: "#94A3B8", fontSize: 12 }}
                 />
               </BarChart>
             </ResponsiveContainer>
           </div>
-
           <div className="bg-surface rounded-2xl shadow-lg p-4 border border-border">
             <h2 className="mb-4 text-slate-100 font-semibold">
               Inventory Aging
@@ -277,106 +272,151 @@ export default function Home() {
 
           <div className="bg-surface rounded-2xl shadow-lg p-4 border border-border">
             <h2 className="mb-4 text-slate-100 font-semibold">
-              Top Supplier Countries
+              Inventory Value Per Warehouse
             </h2>
-            <ResponsiveContainer width="100%" height={400}>
+            <ResponsiveContainer width="100%" height={250}>
               <BarChart
-                data={supplierCountriesData}
-                margin={{ top: 20, right: 20, left: 20, bottom: 60 }}
+                data={inventoryPerWarehouse}
+                layout="vertical"
+                margin={{ left: 10, right: 30, top: 10, bottom: 10 }}
               >
                 <defs>
                   <linearGradient
-                    id="supplierGradient"
+                    id="customerGradient"
                     x1="0"
                     y1="0"
-                    x2="0"
-                    y2="1"
+                    x2="1"
+                    y2="0"
                   >
-                    <stop offset="0%" stopColor="#38BDF8" stopOpacity={1} />
-                    <stop offset="100%" stopColor="#0EA5E9" stopOpacity={0.8} />
+                    <stop offset="0%" stopColor="#0EA5E9" stopOpacity={0.85} />
+                    <stop offset="100%" stopColor="#38BDF8" stopOpacity={1} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
                 <XAxis
-                  dataKey="country"
-                  stroke="#94A3B8"
-                  angle={-45}
-                  textAnchor="end"
-                  height={60}
-                  tick={{ fontSize: 11, fill: "#94A3B8" }}
-                />
-                <YAxis
+                  type="number"
                   stroke="#94A3B8"
                   tick={{ fontSize: 12, fill: "#94A3B8" }}
+                  tickFormatter={(value) => formatCurrency(value)}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  width={100}
+                  style={{ overflow: "hidden" }}
+                  stroke="#94A3B8"
+                  tick={{ fontSize: 11, fill: "#94A3B8" }}
+                  tickFormatter={(value) => truncateLabel(String(value))}
                 />
                 <Tooltip
                   cursor={{ fill: "#94A3B8", opacity: 0.1 }}
+                  formatter={(value) =>
+                    typeof value === "number"
+                      ? `${value.toLocaleString()} AED`
+                      : ""
+                  }
                   contentStyle={tooltipStyle}
                 />
                 <Bar
-                  dataKey="count"
-                  fill="url(#supplierGradient)"
-                  radius={[8, 8, 0, 0]}
-                  label={{ position: "top", fill: "#94A3B8", fontSize: 12 }}
+                  dataKey="amount"
+                  fill="url(#customerGradient)"
+                  radius={[0, 8, 8, 0]}
+                  label={{
+                    position: "right",
+                    fill: "#94A3B8",
+                    fontSize: 12,
+                    formatter: (value: unknown) =>
+                      typeof value === "number" ? formatCurrency(value) : "",
+                  }}
                 />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-surface rounded-2xl shadow-lg p-4 border border-border">
-            <h2 className="mb-4 text-slate-100 font-semibold">
-              Overdue Days Distribution
-            </h2>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart
-                data={overdueData}
-                margin={{ top: 20, right: 20, left: 20, bottom: 40 }}
+          <div className="bg-surface rounded-xl shadow-lg p-6 border border-border">
+            <h3 className="text-slate-100 font-semibold mb-4">
+              Sales vs Purchases
+            </h3>
+
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart
+                data={salesData}
+                margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
               >
-                <defs>
-                  <linearGradient
-                    id="overdueGradient"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop offset="0%" stopColor="#38BDF8" stopOpacity={1} />
-                    <stop offset="100%" stopColor="#0EA5E9" stopOpacity={0.8} />
-                  </linearGradient>
-                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
+
                 <XAxis
-                  dataKey="days"
+                  dataKey="period"
                   stroke="#94A3B8"
-                  tick={{ fontSize: 12, fill: "#94A3B8" }}
-                  label={{
-                    value: "Days Overdue",
-                    position: "insideBottom",
-                    offset: -15,
+                  tick={{
+                    fontSize: 12,
                     fill: "#94A3B8",
                   }}
                 />
+
                 <YAxis
                   stroke="#94A3B8"
-                  tick={{ fontSize: 12, fill: "#94A3B8" }}
-                  label={{
-                    value: "Count",
-                    angle: -90,
-                    position: "insideLeft",
+                  tick={{
+                    fontSize: 12,
                     fill: "#94A3B8",
                   }}
+                  tickFormatter={formatCurrency}
                 />
+
                 <Tooltip
-                  cursor={{ fill: "#94A3B8", opacity: 0.1 }}
                   contentStyle={tooltipStyle}
+                  cursor={{
+                    fill: "#94A3B8",
+                    opacity: 0.1,
+                  }}
+                  itemSorter={(item) => (item.name === "Sales" ? 0 : 1)}
+                  formatter={(value, name) => [
+                    `${Number(value).toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })} AED`,
+                    name,
+                  ]}
                 />
-                <Bar
-                  dataKey="count"
-                  fill="url(#overdueGradient)"
-                  radius={[8, 8, 0, 0]}
-                  label={{ position: "top", fill: "#94A3B8", fontSize: 12 }}
+
+                <Legend
+                  wrapperStyle={{
+                    color: "#94A3B8",
+                    fontSize: "12px",
+                  }}
+                  itemSorter={(item) => (item.dataKey === "Sales" ? 0 : 1)}
                 />
-              </BarChart>
+
+                <Line
+                  type="monotone"
+                  dataKey="sales"
+                  name="Sales"
+                  stroke="#38BDF8"
+                  strokeWidth={3}
+                  dot={{
+                    fill: "#38BDF8",
+                    r: 4,
+                  }}
+                  activeDot={{
+                    r: 6,
+                  }}
+                />
+
+                <Line
+                  type="monotone"
+                  dataKey="purchases"
+                  name="Purchases"
+                  stroke="#A78BFA"
+                  strokeWidth={3}
+                  dot={{
+                    fill: "#A78BFA",
+                    r: 4,
+                  }}
+                  activeDot={{
+                    r: 6,
+                  }}
+                />
+              </LineChart>
             </ResponsiveContainer>
           </div>
         </div>

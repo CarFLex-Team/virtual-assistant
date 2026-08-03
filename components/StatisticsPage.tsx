@@ -385,7 +385,7 @@ export default function StatisticsPage() {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, value }) => `${name}: $${value}`}
+                label={({ name, value }) => `${name}: ${value} AED`}
                 outerRadius={80}
                 dataKey="value"
               >
@@ -400,7 +400,7 @@ export default function StatisticsPage() {
               </Pie>
               <Tooltip
                 formatter={(value) =>
-                  value ? `$${Number(value).toLocaleString()}` : "$0"
+                  value ? `${Number(value).toLocaleString()} AED` : "0 AED"
                 }
                 contentStyle={tooltipStyle}
               />
@@ -515,7 +515,7 @@ export default function StatisticsPage() {
                   650 units
                 </td>
                 <td className="py-3 px-4 text-sm text-right text-slate-100">
-                  $9,625
+                  $9,625 AED
                 </td>
                 <td></td>
               </tr>
