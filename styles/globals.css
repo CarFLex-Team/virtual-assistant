@@ -7,18 +7,17 @@
   --color-background: #0b1120;
   --color-surface: #111827;
   --color-border: #1e293b;
-
   --color-accent: #38bdf8;
   --color-accent-hover: #0ea5e9;
-
-  --color-muted: #94a3b8; /* used in charts only */
-
-  /* --- danger / errors --- */
+  --color-muted: #94a3b8;
+  --color-search: #a78bfa;
+  --color-search-hover: #8b7cf6;
+  --color-investigate: #fb923c;
+  --color-investigate-hover: #f97316;
   --color-danger: #f87171;
   --color-danger-text: #fca5a5;
   --color-danger-bg: #3f1d1d;
   --color-danger-border: #5c2626;
-
   --color-primary-600: #052f4a;
   --color-primary-400: #d09870;
 }

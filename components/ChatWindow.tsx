@@ -1,12 +1,9 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { ArrowUp, Square, Sparkles } from "lucide-react";
-import Message from "./MessageBubble";
-import ErrorBubble from "./ErrorBubble";
-import StreamingMessage from "./StreamingMessage";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowUp, Square, Sparkles, Search, HatGlasses } from "lucide-react";
+import MessageList from "./MessageList";
 import { streamAIResponse } from "@/utils/StreamApi";
 import { useThreadStore, Thread, ChatMessage } from "@/store/threadStore";
-import { formatChatDate } from "@/utils/formatChatDate";
 
 const SUGGESTIONS = [
   "What you should actually be buying this week?",
@@ -15,6 +12,32 @@ const SUGGESTIONS = [
 ];
 
 const DEFAULT_STAGE = "Thinking...";
+const SEARCH_STAGE = "Searching the web...";
+const INVESTIGATE_STAGE = "Investigating...";
+
+const SEARCH_PREFIX = "/search";
+const INVESTIGATE_PREFIX = "/investigate";
+const isSearchCommand = (text: string) =>
+  text.trim().toLowerCase().startsWith(SEARCH_PREFIX);
+const isInvestigateCommand = (text: string) =>
+  text.trim().toLowerCase().startsWith(INVESTIGATE_PREFIX);
+// const stripSearchPrefix = (text: string) =>
+//   text.trim().slice(SEARCH_PREFIX.length).trim();
+
+const COMMANDS = [
+  {
+    key: "/search",
+    label: "Search the web",
+    description: "Look up live information instead of your data",
+    icon: Search,
+  },
+  {
+    key: "/investigate",
+    label: "Investigate",
+    description: "Ask for a deeper analysis of your data",
+    icon: HatGlasses,
+  },
+];
 
 export default function ChatWindow() {
   const {
@@ -28,14 +51,19 @@ export default function ChatWindow() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [liveStage, setLiveStage] = useState(DEFAULT_STAGE);
+  const [highlightedCommand, setHighlightedCommand] = useState(0);
   const [streamingThreadId, setStreamingThreadId] = useState<string | null>(
     null,
   );
   const controllerRef = useRef<AbortController | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null!);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const streamTokensRef = useRef<Map<number, string[]>>(new Map());
+  const getStreamTokens = useCallback(
+    (id: number) => streamTokensRef.current.get(id) || [],
+    [],
+  );
 
   useEffect(() => {
     if (streamingThreadId && streamingThreadId !== activeThread) return;
@@ -64,49 +92,57 @@ export default function ChatWindow() {
     el.style.overflowY =
       el.scrollHeight > TEXTAREA_MAX_HEIGHT ? "auto" : "hidden";
   }, [input]);
-
   useEffect(() => {
     if (!activeThread) return;
+    const exists =
+      threads.some((t) => t.id === activeThread) ||
+      pendingThreads?.some((t) => t.id === activeThread);
+    if (exists) return;
+    const fallback = pendingThreads?.[0] || threads[0] || null;
+    setActiveThread(fallback?.id || null);
+  }, [activeThread, threads, pendingThreads, setActiveThread]);
+  // useEffect(() => {
+  //   if (!activeThread) return;
 
-    let currentThread =
-      threads.find((t) => t.id === activeThread) ||
-      pendingThreads?.find((t) => t.id === activeThread) ||
-      null;
+  //   let currentThread =
+  //     threads.find((t) => t.id === activeThread) ||
+  //     pendingThreads?.find((t) => t.id === activeThread) ||
+  //     null;
 
-    if (!currentThread) {
-      currentThread = pendingThreads?.[0] || threads[0] || null;
-      setActiveThread(currentThread?.id || null);
-    }
+  //   if (!currentThread) {
+  //     currentThread = pendingThreads?.[0] || threads[0] || null;
+  //     setActiveThread(currentThread?.id || null);
+  //   }
 
-    const savedBuffer = localStorage.getItem(`messageBuffer ${activeThread}`);
-    if (!savedBuffer) return;
+  //   const savedBuffer = localStorage.getItem(`messageBuffer ${activeThread}`);
+  //   if (!savedBuffer) return;
 
-    const bufferedMessages: ChatMessage[] = JSON.parse(savedBuffer);
-    if (bufferedMessages.length === 0) return;
+  //   const bufferedMessages: ChatMessage[] = JSON.parse(savedBuffer);
+  //   if (bufferedMessages.length === 0) return;
 
-    const existingIds = new Set(currentThread.chat_messages.map((m) => m.id));
-    const newMessages = bufferedMessages.filter((m) => !existingIds.has(m.id));
+  //   const existingIds = new Set(currentThread.chat_messages.map((m) => m.id));
+  //   const newMessages = bufferedMessages.filter((m) => !existingIds.has(m.id));
 
-    if (newMessages.length === 0) return;
+  //   if (newMessages.length === 0) return;
 
-    currentThread.chat_messages = [
-      ...currentThread.chat_messages,
-      ...newMessages,
-    ];
-    currentThread.buffer = bufferedMessages;
+  //   currentThread.chat_messages = [
+  //     ...currentThread.chat_messages,
+  //     ...newMessages,
+  //   ];
+  //   currentThread.buffer = bufferedMessages;
 
-    if (pendingThreads?.some((t) => t.id === activeThread)) {
-      setPendingThreads(
-        pendingThreads.map((t) =>
-          t.id === activeThread ? { ...currentThread } : t,
-        ),
-      );
-    } else {
-      setThreads(
-        threads.map((t) => (t.id === activeThread ? { ...currentThread } : t)),
-      );
-    }
-  }, [activeThread, pendingThreads]);
+  //   if (pendingThreads?.some((t) => t.id === activeThread)) {
+  //     setPendingThreads(
+  //       pendingThreads.map((t) =>
+  //         t.id === activeThread ? { ...currentThread } : t,
+  //       ),
+  //     );
+  //   } else {
+  //     setThreads(
+  //       threads.map((t) => (t.id === activeThread ? { ...currentThread } : t)),
+  //     );
+  //   }
+  // }, [activeThread, pendingThreads]);
 
   const flushMessagesToDB = async (threadId: string) => {
     const thread =
@@ -121,14 +157,18 @@ export default function ChatWindow() {
         body: JSON.stringify({ messages: thread.buffer }),
       });
 
-      thread.buffer = [];
+      const isPending = pendingThreads?.some((t) => t.id === threadId);
 
-      if (pendingThreads?.some((t) => t.id === threadId)) {
-        setPendingThreads(
-          pendingThreads.map((t) => (t.id === threadId ? { ...thread } : t)),
+      if (isPending) {
+        setPendingThreads((prev) =>
+          prev
+            ? prev.map((t) => (t.id === threadId ? { ...t, buffer: [] } : t))
+            : prev,
         );
       } else {
-        setThreads(threads.map((t) => (t.id === threadId ? { ...thread } : t)));
+        setThreads((prev) =>
+          prev.map((t) => (t.id === threadId ? { ...t, buffer: [] } : t)),
+        );
       }
       localStorage.removeItem(`messageBuffer ${threadId}`);
     } catch (err) {
@@ -144,17 +184,19 @@ export default function ChatWindow() {
   };
 
   const syncCurrentThread = (currentThread: Thread) => {
-    if (pendingThreads?.some((t) => t.id === currentThread.id)) {
-      setPendingThreads(
-        pendingThreads.map((t) =>
-          t.id === currentThread.id ? { ...currentThread } : t,
-        ),
+    const isPending = pendingThreads?.some((t) => t.id === currentThread.id);
+
+    if (isPending) {
+      setPendingThreads((prev) =>
+        prev
+          ? prev.map((t) =>
+              t.id === currentThread.id ? { ...currentThread } : t,
+            )
+          : prev,
       );
     } else {
-      setThreads(
-        threads.map((t) =>
-          t.id === currentThread.id ? { ...currentThread } : t,
-        ),
+      setThreads((prev) =>
+        prev.map((t) => (t.id === currentThread.id ? { ...currentThread } : t)),
       );
     }
   };
@@ -164,6 +206,8 @@ export default function ChatWindow() {
     controllerRef.current = new AbortController();
     let currentThread = getCurrentThread();
 
+    const isSearch = isSearchCommand(content);
+    const isInvestigate = isInvestigateCommand(content);
     if (!currentThread || !currentThread.saved) {
       await fetch("/api/threads", {
         method: "POST",
@@ -195,7 +239,7 @@ export default function ChatWindow() {
             created_at: new Date().toISOString(),
             saved: false,
           };
-          setPendingThreads([currentThread!, ...(pendingThreads || [])]);
+          setPendingThreads((prev) => [currentThread!, ...(prev || [])]);
           setActiveThread(currentThread!.id);
         });
     }
@@ -220,6 +264,8 @@ export default function ChatWindow() {
       content: "",
       visual: null,
       timestamp: new Date().toISOString(),
+      ...(isSearch ? { source: "search" as const } : {}),
+      ...(isInvestigate ? { source: "investigate" as const } : {}),
     };
     currentThread.chat_messages.push(aiMessage);
     currentThread.buffer.push(aiMessage);
@@ -227,7 +273,13 @@ export default function ChatWindow() {
 
     setLoading(true);
     setStreamingThreadId(currentThread.id);
-    setLiveStage(DEFAULT_STAGE);
+    setLiveStage(
+      isSearch
+        ? SEARCH_STAGE
+        : isInvestigate
+          ? INVESTIGATE_STAGE
+          : DEFAULT_STAGE,
+    );
 
     await streamAIResponse(content, {
       signal: controllerRef.current?.signal,
@@ -283,6 +335,22 @@ export default function ChatWindow() {
     });
   };
 
+  const commandMatch = input.match(/^\/(\S*)$/);
+  const filteredCommands = commandMatch
+    ? COMMANDS.filter((c) =>
+        c.key.slice(1).toLowerCase().startsWith(commandMatch[1].toLowerCase()),
+      )
+    : [];
+  const showCommandMenu = filteredCommands.length > 0;
+  useEffect(() => {
+    setHighlightedCommand(0);
+  }, [input]);
+
+  const selectCommand = (cmd: (typeof COMMANDS)[number]) => {
+    setInput(`${cmd.key} `);
+    requestAnimationFrame(() => textareaRef.current?.focus());
+  };
+
   const handleSend = () => {
     if (loading && streamingThreadId === activeThread) {
       controllerRef.current?.abort();
@@ -298,48 +366,15 @@ export default function ChatWindow() {
     sendMessage(input);
   };
 
-  const SafeMessage = ({ message }: { message: ChatMessage }) => {
-    if (typeof message.content === "object" && message.type === "user") {
-      return (
-        <Message
-          message={{ ...message, content: JSON.stringify(message.content) }}
-        />
-      );
-    }
-    return <Message message={message} />;
-  };
-
-  const renderMessage = (msg: ChatMessage) => {
-    switch (msg.visual?.type?.toLowerCase() || msg.type) {
-      case "user":
-      case "bot":
-        return <SafeMessage message={msg} />;
-      case "error":
-        return <ErrorBubble content={msg.content} />;
-      default:
-        return <SafeMessage message={{ ...msg, type: "bot" }} />;
-    }
-  };
-
   const currentThread = getCurrentThread();
-  const displayedMessages = currentThread ? currentThread.chat_messages : [];
   const showWelcome = currentThread && currentThread.chat_messages.length === 0;
 
   const isLoadingThisThread =
     loading && streamingThreadId === currentThread?.id;
 
-  const streamingMessage =
-    isLoadingThisThread &&
-    displayedMessages[displayedMessages.length - 1]?.type === "bot"
-      ? displayedMessages[displayedMessages.length - 1]
-      : null;
-  const isAwaitingFirstToken =
-    isLoadingThisThread &&
-    (!streamingMessage || streamingMessage.content === "");
-
   return (
     <div className="h-[92vh] p-4 bg-background relative overflow-hidden">
-      {displayedMessages.length <= 0 && (
+      {(!currentThread || currentThread.chat_messages.length === 0) && (
         <div
           className="absolute inset-0 pointer-events-none opacity-[0.12]"
           style={{
@@ -379,59 +414,46 @@ export default function ChatWindow() {
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto px-2 py-4 space-y-3 ">
-          {currentThread && displayedMessages.length > 0 && (
-            <div className="flex justify-center mb-2">
-              <p className="text-slate-400 text-xs text-center">
-                {formatChatDate(currentThread.created_at)}
-              </p>
-            </div>
-          )}
-          {displayedMessages.map((msg: ChatMessage, i) => {
-            const isStreamingPlaceholder =
-              isLoadingThisThread &&
-              i === displayedMessages.length - 1 &&
-              msg.type === "bot";
+        <MessageList
+          currentThread={currentThread}
+          isLoadingThisThread={!!isLoadingThisThread}
+          liveStage={liveStage}
+          getStreamTokens={getStreamTokens}
+          messagesEndRef={messagesEndRef}
+        />
 
-            if (isStreamingPlaceholder && msg.content === "") return null;
-
-            return (
-              <div
-                key={msg.id}
-                className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}
-              >
-                {isStreamingPlaceholder ? (
-                  <StreamingMessage
-                    tokens={streamTokensRef.current.get(msg.id) || []}
-                  />
-                ) : (
-                  renderMessage(msg)
-                )}
-              </div>
-            );
-          })}
-
-          {isAwaitingFirstToken && (
-            <div className="flex justify-start">
-              <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl rounded-bl-sm bg-surface border border-border">
-                <span className="flex gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce [animation-delay:-0.3s]" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce [animation-delay:-0.15s]" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" />
-                </span>
-                <span
-                  key={liveStage}
-                  className="text-sm text-slate-400 animate-[fadeIn_0.3s_ease-in]"
+        <div className="relative flex gap-2 items-end bg-surface border border-border rounded-2xl p-2 focus-within:border-accent transition-colors">
+          {showCommandMenu && (
+            <div className="absolute bottom-full mb-2 left-0 w-72 bg-surface border border-border rounded-xl shadow-lg p-1 z-20">
+              {filteredCommands.map((cmd, i) => (
+                <button
+                  key={cmd.key}
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    selectCommand(cmd);
+                  }}
+                  onMouseEnter={() => setHighlightedCommand(i)}
+                  className={`w-full flex items-start gap-2 px-3 py-2 rounded-lg text-left transition-colors cursor-pointer ${
+                    i === highlightedCommand
+                      ? "bg-border"
+                      : "hover:bg-border/60"
+                  }`}
                 >
-                  {liveStage}
-                </span>
-              </div>
+                  <cmd.icon size={16} className="text-accent mt-0.5 shrink-0" />
+                  <span>
+                    <span className="block text-sm font-medium text-slate-100">
+                      {cmd.key}
+                    </span>
+                    <span className="block text-xs text-slate-400">
+                      {cmd.description}
+                    </span>
+                  </span>
+                </button>
+              ))}
             </div>
           )}
-          <div ref={messagesEndRef} />
-        </div>
 
-        <div className=" flex gap-2 items-end bg-surface border border-border rounded-2xl p-2 focus-within:border-accent transition-colors">
           <textarea
             ref={textareaRef}
             rows={1}
@@ -440,12 +462,40 @@ export default function ChatWindow() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
+              if (showCommandMenu) {
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  setHighlightedCommand(
+                    (i) => (i + 1) % filteredCommands.length,
+                  );
+                  return;
+                }
+                if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setHighlightedCommand(
+                    (i) =>
+                      (i - 1 + filteredCommands.length) %
+                      filteredCommands.length,
+                  );
+                  return;
+                }
+                if (e.key === "Enter" || e.key === "Tab") {
+                  e.preventDefault();
+                  selectCommand(filteredCommands[highlightedCommand]);
+                  return;
+                }
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  setInput("");
+                  return;
+                }
+              }
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 handleSend();
               }
             }}
-            placeholder="Ask about your data..."
+            placeholder="Ask about your data, or type / for commands..."
           />
           <button
             className="shrink-0 bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed text-background font-semibold p-2.5 rounded-xl transition-colors cursor-pointer"
