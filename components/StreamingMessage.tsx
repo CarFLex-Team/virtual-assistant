@@ -5,10 +5,12 @@ export default function StreamingMessage({
   variant = "default",
 }: {
   tokens: string[];
-  variant?: "default" | "search" | "investigate";
+  variant?: "default" | "search" | "investigate" | "scan" | "detect";
 }) {
   const isSearch = variant === "search";
   const isInvestigate = variant === "investigate";
+  const isScan = variant === "scan";
+  const isDetect = variant === "detect";
 
   return (
     <div
@@ -17,6 +19,10 @@ export default function StreamingMessage({
           ? "bg-search/10 border-search/40"
           : isInvestigate
             ? "bg-investigate/10 border-investigate/40"
+            : isScan
+              ? "bg-scan/10 border-scan/40"
+              : isDetect
+                ? "bg-detect/10 border-detect/40"
             : "bg-surface border-border"
       }`}
     >
@@ -35,6 +41,10 @@ export default function StreamingMessage({
               ? "bg-search"
               : isInvestigate
                 ? "bg-investigate"
+                : isScan
+                  ? "bg-scan"
+                  : isDetect
+                    ? "bg-detect"
                 : "bg-accent"
           }`}
         />

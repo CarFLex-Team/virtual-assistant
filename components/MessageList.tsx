@@ -22,6 +22,10 @@ const SafeMessage = memo(function SafeMessage({
               ? "search"
               : message.source === "investigate"
                 ? "investigate"
+                : message.source === "scan"
+                  ? "scan"
+                  : message.source === "detect"
+                    ? "detect"
                 : undefined,
         }}
       />
@@ -34,9 +38,13 @@ const SafeMessage = memo(function SafeMessage({
         source:
           message.source === "search"
             ? "search"
-            : message.source === "investigate"
-              ? "investigate"
-              : undefined,
+          : message.source === "investigate"
+            ? "investigate"
+            : message.source === "scan"
+              ? "scan"
+              : message.source === "detect"
+                ? "detect"
+            : undefined,
       }}
     />
   );
@@ -81,6 +89,8 @@ function MessageListImpl({
     (!streamingMessage || streamingMessage.content === "");
   const isSearchStream = streamingMessage?.source === "search";
   const isInvestigateStream = streamingMessage?.source === "investigate";
+  const isScanStream = streamingMessage?.source === "scan";
+  const isDetectStream = streamingMessage?.source === "detect";
 
   return (
     <div className="flex-1 overflow-y-auto px-2 py-4 space-y-3">
@@ -113,6 +123,10 @@ function MessageListImpl({
                     ? "search"
                     : msg.source === "investigate"
                       ? "investigate"
+                      : msg.source === "scan"
+                        ? "scan"
+                        : msg.source === "detect"
+                          ? "detect"
                       : "default"
                 }
               />
@@ -131,6 +145,10 @@ function MessageListImpl({
                 ? "bg-search/10 border-search/40"
                 : isInvestigateStream
                   ? "bg-investigate/10 border-investigate/40"
+                  : isScanStream
+                    ? "bg-scan/10 border-scan/40"
+                    : isDetectStream
+                      ? "bg-detect/10 border-detect/40"
                   : "bg-surface border-border"
             }`}
           >
@@ -141,6 +159,10 @@ function MessageListImpl({
                     ? "bg-search"
                     : isInvestigateStream
                       ? "bg-investigate"
+                      : isScanStream
+                        ? "bg-scan"
+                        : isDetectStream
+                          ? "bg-detect"
                       : "bg-accent"
                 }`}
               />
@@ -150,6 +172,10 @@ function MessageListImpl({
                     ? "bg-search"
                     : isInvestigateStream
                       ? "bg-investigate"
+                      : isScanStream
+                        ? "bg-scan"
+                        : isDetectStream
+                          ? "bg-detect"
                       : "bg-accent"
                 }`}
               />
@@ -159,6 +185,10 @@ function MessageListImpl({
                     ? "bg-search"
                     : isInvestigateStream
                       ? "bg-investigate"
+                      : isScanStream
+                        ? "bg-scan"
+                        : isDetectStream
+                          ? "bg-detect"
                       : "bg-accent"
                 }`}
               />

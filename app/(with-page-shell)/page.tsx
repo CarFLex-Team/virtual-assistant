@@ -107,7 +107,7 @@ export default function Home() {
     label.length > maxLength ? `${label.slice(0, maxLength)}…` : label;
   return (
     <div className="min-h-screen overflow-auto bg-background">
-      <div className="max-w-7xl mx-auto p-8">
+      <div className=" mx-auto p-8">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-semibold text-slate-100">
             Business Analytics Dashboard

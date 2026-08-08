@@ -1,5 +1,5 @@
 "use client";
-import { HatGlasses, Search } from "lucide-react";
+import { HatGlasses, ScanSearch, Search, SearchCheck } from "lucide-react";
 import TableView from "./TableView";
 import { ChatMessage } from "@/store/threadStore";
 import StatsChart from "./StatsChart";
@@ -16,7 +16,7 @@ interface MessageProps {
     visual?: any;
     timestamp: string;
 
-    source?: "search" | "investigate";
+    source?: "search" | "investigate" | "scan" | "detect";
   };
 }
 
@@ -24,6 +24,8 @@ export default function MessageBubble({ message }: MessageProps) {
   const isUser = message.type === "user";
   const isSearch = !isUser && message.source === "search";
   const isInvestigate = !isUser && message.source === "investigate";
+  const isScan = !isUser && message.source === "scan";
+  const isDetect = !isUser && message.source === "detect";
 
   const trimmedContent =
     typeof message.content === "string" ? message.content.trim() : "";
@@ -31,11 +33,21 @@ export default function MessageBubble({ message }: MessageProps) {
     isUser && trimmedContent.toLowerCase().startsWith("/search");
   const isUserInvestigateCommand =
     isUser && trimmedContent.toLowerCase().startsWith("/investigate");
+  const isUserScanCommand =
+    isUser && trimmedContent.toLowerCase().startsWith("/scan");
+  const isUserDetectCommand =
+    isUser && trimmedContent.toLowerCase().startsWith("/detect");
   const searchQuery = isUserSearchCommand
     ? trimmedContent.slice("/search".length).trim()
     : null;
   const investigateQuery = isUserInvestigateCommand
     ? trimmedContent.slice("/investigate".length).trim()
+    : null;
+  const scanQuery = isUserScanCommand
+    ? trimmedContent.slice("/scan".length).trim()
+    : null;
+  const detectQuery = isUserDetectCommand
+    ? trimmedContent.slice("/detect".length).trim()
     : null;
 
   const renderMessage = (msg: ChatMessage) => {
@@ -66,6 +78,10 @@ export default function MessageBubble({ message }: MessageProps) {
               ? "bg-search/10 border-search/40 text-slate-100 rounded-bl-sm"
               : isInvestigate
                 ? "bg-investigate/10 border-investigate/40 text-slate-100 rounded-bl-sm"
+                : isScan
+                  ? "bg-scan/10 border-scan/40 text-slate-100 rounded-bl-sm"
+                  : isDetect
+                    ? "bg-detect/10 border-detect/40 text-slate-100 rounded-bl-sm"
                 : "bg-surface border-border text-slate-100 rounded-bl-sm"
         }`}
     >
@@ -79,6 +95,18 @@ export default function MessageBubble({ message }: MessageProps) {
         <div className="flex items-center gap-1.5 text-xs font-medium text-investigate mb-1.5">
           <HatGlasses size={12} />
           Investigate
+        </div>
+      )}
+      {isScan && (
+        <div className="flex items-center gap-1.5 text-xs font-medium text-scan mb-1.5">
+          <ScanSearch size={12} />
+          Scan
+        </div>
+      )}
+      {isDetect && (
+        <div className="flex items-center gap-1.5 text-xs font-medium text-detect mb-1.5">
+          <SearchCheck size={12} />
+          Detect
         </div>
       )}
       {isUserSearchCommand ? (
@@ -96,6 +124,22 @@ export default function MessageBubble({ message }: MessageProps) {
             Investigate
           </span>
           {investigateQuery && <FormattedMessage text={investigateQuery} />}
+        </div>
+      ) : isUserScanCommand ? (
+        <div>
+          <span className="inline-flex items-center gap-1 text-xs font-semibold border border-background/30 shadow-sm rounded-md px-2 py-1 mb-1.5 bg-background/15">
+            <ScanSearch size={12} />
+            Scan
+          </span>
+          {scanQuery && <FormattedMessage text={scanQuery} />}
+        </div>
+      ) : isUserDetectCommand ? (
+        <div>
+          <span className="inline-flex items-center gap-1 text-xs font-semibold border border-background/30 shadow-sm rounded-md px-2 py-1 mb-1.5 bg-background/15">
+            <SearchCheck size={12} />
+            Detect
+          </span>
+          {detectQuery && <FormattedMessage text={detectQuery} />}
         </div>
       ) : (
         <FormattedMessage text={message.content || "No content"} />

@@ -1,6 +1,14 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowUp, Square, Sparkles, Search, HatGlasses } from "lucide-react";
+import {
+  ArrowUp,
+  Square,
+  Sparkles,
+  Search,
+  HatGlasses,
+  ScanSearch,
+  SearchCheck,
+} from "lucide-react";
 import MessageList from "./MessageList";
 import { streamAIResponse } from "@/utils/StreamApi";
 import { useThreadStore, Thread, ChatMessage } from "@/store/threadStore";
@@ -17,10 +25,16 @@ const INVESTIGATE_STAGE = "Investigating...";
 
 const SEARCH_PREFIX = "/search";
 const INVESTIGATE_PREFIX = "/investigate";
+const SCAN_PREFIX = "/scan";
+const DETECT_PREFIX = "/detect";
 const isSearchCommand = (text: string) =>
   text.trim().toLowerCase().startsWith(SEARCH_PREFIX);
 const isInvestigateCommand = (text: string) =>
   text.trim().toLowerCase().startsWith(INVESTIGATE_PREFIX);
+const isScanCommand = (text: string) =>
+  text.trim().toLowerCase().startsWith(SCAN_PREFIX);
+const isDetectCommand = (text: string) =>
+  text.trim().toLowerCase().startsWith(DETECT_PREFIX);
 // const stripSearchPrefix = (text: string) =>
 //   text.trim().slice(SEARCH_PREFIX.length).trim();
 
@@ -36,6 +50,18 @@ const COMMANDS = [
     label: "Investigate",
     description: "Ask for a deeper analysis of your data",
     icon: HatGlasses,
+  },
+  {
+    key: "/scan",
+    label: "Scan",
+    description: "Scan your data for relevant insights",
+    icon: ScanSearch,
+  },
+  {
+    key: "/detect",
+    label: "Detect",
+    description: "Detect patterns and anomalies in your data",
+    icon: SearchCheck,
   },
 ];
 
@@ -208,6 +234,8 @@ export default function ChatWindow() {
 
     const isSearch = isSearchCommand(content);
     const isInvestigate = isInvestigateCommand(content);
+    const isScan = isScanCommand(content);
+    const isDetect = isDetectCommand(content);
     if (!currentThread || !currentThread.saved) {
       await fetch("/api/threads", {
         method: "POST",
@@ -266,6 +294,8 @@ export default function ChatWindow() {
       timestamp: new Date().toISOString(),
       ...(isSearch ? { source: "search" as const } : {}),
       ...(isInvestigate ? { source: "investigate" as const } : {}),
+      ...(isScan ? { source: "scan" as const } : {}),
+      ...(isDetect ? { source: "detect" as const } : {}),
     };
     currentThread.chat_messages.push(aiMessage);
     currentThread.buffer.push(aiMessage);
@@ -278,6 +308,10 @@ export default function ChatWindow() {
         ? SEARCH_STAGE
         : isInvestigate
           ? INVESTIGATE_STAGE
+          : isScan
+            ? "Scanning..."
+            : isDetect
+              ? "Detecting..."
           : DEFAULT_STAGE,
     );
 
