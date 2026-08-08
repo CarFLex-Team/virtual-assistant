@@ -121,12 +121,12 @@ export default function Sidebar({
         startNewChat();
       },
     },
-    {
-      id: "Stats",
-      label: "Statistics",
-      href: "/stats",
-      icon: ChartColumnDecreasing,
-    },
+    // {
+    //   id: "Stats",
+    //   label: "Statistics",
+    //   href: "/stats",
+    //   icon: ChartColumnDecreasing,
+    // },
   ];
 
   useEffect(() => {
