@@ -55,8 +55,11 @@ export default function DailyBrief({
   setShowBrief: (show: boolean) => void;
 }) {
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-background border border-border shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-auto rounded-2xl">
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={() => setShowBrief(false)}
+    >
+      <div className="bg-background border border-border shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-auto rounded-2xl m-4">
         <div className="sticky top-0 bg-surface border-b border-border text-slate-100 p-6 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div>
@@ -116,8 +119,8 @@ export default function DailyBrief({
             </div>
             <div className="space-y-2 text-sm text-slate-300">
               <p>
-                Current customer base stands at 1,567 with 264,209 AED in active
-                open balances.
+                Current customer base stands at 14,750 with 1,677,363 AED in
+                active open balances.
               </p>
               <div className="mt-3 grid grid-cols-2 gap-4">
                 <div className="bg-background rounded-lg p-3 border border-border">
@@ -252,7 +255,7 @@ export default function DailyBrief({
                 Operational Status
               </h3>
               <ul className="space-y-1 text-sm text-slate-300">
-                <li>• Active Customers: 1,567</li>
+                <li>• Active Customers: 14,750</li>
                 <li>• High Risk Accounts: 12</li>
                 <li>• Responded Suppliers: 265</li>
                 <li>• AI Monitoring Engines: Real-time</li>

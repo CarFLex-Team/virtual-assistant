@@ -1,4 +1,6 @@
 "use client";
+import DailyBrief from "@/components/DailyBrief";
+import { Clock } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
   BarChart,
@@ -15,11 +17,7 @@ import {
   LineChart,
   Line,
 } from "recharts";
-import { Clock } from "lucide-react";
-import DailyBrief from "@/components/DailyBrief";
-
 const CHART_COLORS = ["#38BDF8", "#818CF8", "#F59E0B", "#34D399", "#F87171"];
-
 const TopSellingItems = [
   {
     name: "Item C BODY KIT BMW G12 2016-2020 LCI M LOOK ",
@@ -112,7 +110,7 @@ export default function Home() {
           <h1 className="text-2xl font-semibold text-slate-100">
             Business Analytics Dashboard
           </h1>
-          {/* <div className="flex gap-3">
+          <div className="flex gap-3">
             <button
               onClick={() => setShowBrief(true)}
               className="px-4 py-2 bg-accent text-background rounded-lg hover:bg-accent-hover transition-colors flex items-center gap-2 font-medium cursor-pointer"
@@ -120,10 +118,10 @@ export default function Home() {
               <Clock className="w-4 h-4" />
               Morning Brief
             </button>
-          </div> */}
+          </div>
         </div>
 
-        {/* {showBrief && <DailyBrief setShowBrief={setShowBrief} />} */}
+        {showBrief && <DailyBrief setShowBrief={setShowBrief} />}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-surface rounded-2xl shadow-lg p-4 border border-border">

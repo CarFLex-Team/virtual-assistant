@@ -68,7 +68,6 @@ export async function POST(req: Request) {
         },
       };
     } else {
-      // Default mock
       mockResponse = {
         status: "needs_clarification",
         type: "clarification",

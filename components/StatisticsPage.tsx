@@ -26,9 +26,6 @@ import {
   Clock,
 } from "lucide-react";
 
-// Sample data for charts and tables (to be replaced with real API data from Mosap)
-// NOTE: salesData/ordersData below are dated April 2026 — stale relative to
-// "today"; worth refreshing once real API data is wired in.
 const salesData = [
   { date: "2026-04-15", value: 120 },
   { date: "2026-04-16", value: 150 },

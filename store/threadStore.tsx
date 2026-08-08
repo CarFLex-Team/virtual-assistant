@@ -32,8 +32,6 @@ interface ThreadState {
     update: Thread[] | null | ((prev: Thread[] | null) => Thread[] | null),
   ) => void;
 
-  // merges freshly-fetched server threads with any unflushed local buffers,
-  // so a background refetch can never silently drop in-flight messages.
   mergeServerThreads: (serverThreads: any[]) => void;
 
   messageBuffer: ChatMessage[];

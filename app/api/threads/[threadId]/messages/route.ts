@@ -16,7 +16,6 @@ export async function POST(
   }
 
   try {
-    // 1️⃣ Check if thread exists
     const { data: existingThread } = await db
       .from("chat_threads")
       .select("*")
@@ -26,11 +25,10 @@ export async function POST(
     let dbThreadId = threadId;
 
     if (!existingThread) {
-      // 2️⃣ Create thread if it does not exist
       const { data: newThread } = await db
         .from("chat_threads")
         .insert({
-          id: threadId, // keep the frontend ID so state matches
+          id: threadId,
           title: title || "New Chat",
           created_at: new Date().toISOString(),
         })
@@ -40,7 +38,6 @@ export async function POST(
       dbThreadId = newThread.id;
     }
 
-    // 3️⃣ Insert messages
     const { data: savedMessages, error } = await db
       .from("chat_messages")
       .insert(messages.map((m: any) => ({ ...m, thread_id: dbThreadId })))

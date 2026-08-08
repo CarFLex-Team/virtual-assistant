@@ -1,18 +1,3 @@
-// utils/streamAIResponse.ts
-//
-// Reads a Server-Sent-Events stream from the backend and invokes callbacks as
-// each event arrives. Expects the backend to respond with
-// `Content-Type: text/event-stream` and write newline-delimited events like:
-//
-//   data: {"type":"stage","value":"Querying your data..."}\n\n
-//   data: {"type":"token","value":"Based "}\n\n
-//   data: {"type":"token","value":"on "}\n\n
-//   data: {"type":"visual","value":{...}}\n\n
-//   data: {"type":"done"}\n\n
-//
-// Any event shape works as long as it has a `type`; add cases as your
-// backend grows (e.g. "tool_call", "citation", etc).
-
 export type StreamEvent =
   | { type: "stage"; value: string }
   | { type: "token"; value: string }
