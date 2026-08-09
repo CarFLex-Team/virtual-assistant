@@ -95,15 +95,15 @@ export default function DailyBrief({
                 <span className={`${SECTIONS.success.icon} mt-1`}>•</span>
                 <span>All systems running normally</span>
               </li>
-              <li className="flex items-start gap-2">
+              {/* <li className="flex items-start gap-2">
                 <span className={`${SECTIONS.success.icon} mt-1`}>•</span>
                 <span>
                   Anomaly Detection: 0 flagged of 15,082 transactions scanned
                 </span>
-              </li>
+              </li> */}
               <li className="flex items-start gap-2">
                 <span className={`${SECTIONS.success.icon} mt-1`}>•</span>
-                <span>Predictive Risk Score: 8.6 / 100 (Low)</span>
+                <span>Predictive Risk Score: 51.49 / 100 (Moderate)</span>
               </li>
             </ul>
           </section>
@@ -119,7 +119,7 @@ export default function DailyBrief({
             </div>
             <div className="space-y-2 text-sm text-slate-300">
               <p>
-                Current customer base stands at 14,750 with 1,677,363 AED in
+                Current customer base stands at 14,750 with 1,965,812.71 AED in
                 active open balances.
               </p>
               <div className="mt-3 grid grid-cols-2 gap-4">
@@ -127,13 +127,13 @@ export default function DailyBrief({
                   <div className="text-xs text-slate-500 mb-1">
                     Financial Health Score
                   </div>
-                  <div className="text-slate-100 font-medium">78.1</div>
+                  <div className="text-slate-100 font-medium">33.45</div>
                 </div>
                 <div className="bg-background rounded-lg p-3 border border-border">
                   <div className="text-xs text-slate-500 mb-1">
                     Average overdue duration
                   </div>
-                  <div className="text-slate-100 font-medium">12.5 days</div>
+                  <div className="text-slate-100 font-medium">138.86 days</div>
                 </div>
               </div>
             </div>
@@ -152,19 +152,19 @@ export default function DailyBrief({
               <li className="flex items-start gap-3 text-sm">
                 <div className="w-2 h-2 bg-red-500 rounded-full mt-1.5 shrink-0" />
                 <span className="text-slate-300">
-                  445 high-risk overdue accounts above 50 AED (ref. EX-0468)
+                  25 high-risk overdue accounts above 50 AED
                 </span>
               </li>
               <li className="flex items-start gap-3 text-sm">
                 <div className="w-2 h-2 bg-red-500 rounded-full mt-1.5 shrink-0" />
                 <span className="text-slate-300">
-                  Overdue exposure between 30-60 days: 801,556 AED
+                  Overdue exposure between 31-60 days: 115,713.54 AED
                 </span>
               </li>
               <li className="flex items-start gap-3 text-sm">
                 <div className="w-2 h-2 bg-red-500 rounded-full mt-1.5 shrink-0" />
                 <span className="text-slate-300">
-                  Top 5 customers represent 45.2% of total overdue value
+                  Top 5 customers represent 86.49% of total overdue value
                   (collective)
                 </span>
               </li>
@@ -189,9 +189,7 @@ export default function DailyBrief({
               </li>
               <li className="flex items-start gap-2">
                 <span className={`${SECTIONS.insight.icon} mt-1`}>•</span>
-                <span>
-                  Primary Supplier Sourcing Insight: United Arab Emirates
-                </span>
+                <span>Primary Supplier: GAMMA STAR AUTO SPARE PARTS LLC</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className={`${SECTIONS.insight.icon} mt-1`}>•</span>
@@ -227,10 +225,12 @@ export default function DailyBrief({
                 Review high-value customer accounts against financial risk
                 thresholds
               </li>
-              <li>Review customer credit approval concentrations</li>
               <li>
-                Monitor supplier dependency concentrations across sourcing
-                reports
+                Review concentration among customers with significant overdue
+                exposure
+              </li>
+              <li>
+                Monitor supplier dependency and purchase-value concentration
               </li>
             </ol>
           </section>
@@ -256,8 +256,8 @@ export default function DailyBrief({
               </h3>
               <ul className="space-y-1 text-sm text-slate-300">
                 <li>• Active Customers: 14,750</li>
-                <li>• High Risk Accounts: 12</li>
-                <li>• Responded Suppliers: 265</li>
+                <li>• High Risk Accounts: 31</li>
+                <li>• Responded Suppliers: 180</li>
                 <li>• AI Monitoring Engines: Real-time</li>
               </ul>
             </section>
