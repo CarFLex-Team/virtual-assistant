@@ -12,6 +12,7 @@ import {
 import MessageList from "./MessageList";
 import { streamAIResponse } from "@/utils/StreamApi";
 import { useThreadStore, Thread, ChatMessage } from "@/store/threadStore";
+import { authClient } from "@/lib/auth/auth-client";
 
 const SUGGESTIONS = [
   "What you should actually be buying this week?",
@@ -90,7 +91,7 @@ export default function ChatWindow() {
     (id: number) => streamTokensRef.current.get(id) || [],
     [],
   );
-
+  const { data: session } = authClient.useSession();
   useEffect(() => {
     if (streamingThreadId && streamingThreadId !== activeThread) return;
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -312,61 +313,66 @@ export default function ChatWindow() {
             ? "Scanning..."
             : isDetect
               ? "Detecting..."
-          : DEFAULT_STAGE,
+              : DEFAULT_STAGE,
     );
 
-    await streamAIResponse(content, {
-      signal: controllerRef.current?.signal,
+    await streamAIResponse(
+      content,
+      String(session?.user?.company ?? ""),
+      String(session?.user?.id ?? ""),
+      {
+        signal: controllerRef.current?.signal,
 
-      onStage: (stage) => {
-        setLiveStage(stage);
-      },
+        onStage: (stage) => {
+          setLiveStage(stage);
+        },
 
-      onToken: (token) => {
-        aiMessage.content = (aiMessage.content as string) + token;
-        const tokens = streamTokensRef.current.get(aiMessage.id) || [];
-        tokens.push(token);
-        streamTokensRef.current.set(aiMessage.id, tokens);
-        syncCurrentThread(currentThread!);
-      },
+        onToken: (token) => {
+          aiMessage.content = (aiMessage.content as string) + token;
+          const tokens = streamTokensRef.current.get(aiMessage.id) || [];
+          tokens.push(token);
+          streamTokensRef.current.set(aiMessage.id, tokens);
+          syncCurrentThread(currentThread!);
+        },
 
-      onVisual: (visual) => {
-        aiMessage.visual = visual;
-        syncCurrentThread(currentThread!);
-      },
+        onVisual: (visual) => {
+          aiMessage.visual = visual;
+          syncCurrentThread(currentThread!);
+        },
 
-      onDone: () => {
-        setLoading(false);
-        setStreamingThreadId(null);
-        streamTokensRef.current.delete(aiMessage.id);
-        localStorage.setItem(
-          `messageBuffer ${currentThread!.id}`,
-          JSON.stringify(currentThread!.buffer),
-        );
-        syncCurrentThread(currentThread!);
-        if (currentThread!.buffer.length >= 5) {
-          flushMessagesToDB(currentThread!.id);
-        }
-      },
+        onDone: () => {
+          setLoading(false);
+          setStreamingThreadId(null);
+          streamTokensRef.current.delete(aiMessage.id);
+          localStorage.setItem(
+            `messageBuffer ${currentThread!.id}`,
+            JSON.stringify(currentThread!.buffer),
+          );
+          syncCurrentThread(currentThread!);
+          if (currentThread!.buffer.length >= 5) {
+            flushMessagesToDB(currentThread!.id);
+          }
+        },
 
-      onError: (error) => {
-        setLoading(false);
-        setStreamingThreadId(null);
-        streamTokensRef.current.delete(aiMessage.id);
-        const errorMessage: ChatMessage = {
-          id: Date.now() + 3,
-          type: "error",
-          content: {
-            code: error.code || "Error While Responding",
-            message: error.message,
-          },
-          timestamp: new Date().toISOString(),
-        };
-        currentThread!.chat_messages.push(errorMessage);
-        currentThread!.buffer.push(errorMessage);
-        syncCurrentThread(currentThread!);
+        onError: (error) => {
+          setLoading(false);
+          setStreamingThreadId(null);
+          streamTokensRef.current.delete(aiMessage.id);
+          const errorMessage: ChatMessage = {
+            id: Date.now() + 3,
+            type: "error",
+            content: {
+              code: error.code || "Error While Responding",
+              message: error.message,
+            },
+            timestamp: new Date().toISOString(),
+          };
+          currentThread!.chat_messages.push(errorMessage);
+          currentThread!.buffer.push(errorMessage);
+          syncCurrentThread(currentThread!);
+        },
       },
-    });
+    );
   };
 
   const commandMatch = input.match(/^\/(\S*)$/);

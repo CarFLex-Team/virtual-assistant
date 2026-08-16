@@ -16,18 +16,28 @@ export type StreamCallbacks = {
 
 export async function streamAIResponse(
   content: string,
+  sessionId: string,
+  companyId: string,
   { onStage, onToken, onVisual, onDone, onError, signal }: StreamCallbacks,
 ) {
   let fullAnswer = "";
   let visual: any = null;
-
+  console.log("streamAIResponse called with:", {
+    content,
+    sessionId,
+    companyId,
+  });
   try {
     const res = await fetch(
       "https://api.eliaracarflex.cfd/api/v1/chat/stream",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: content, session_id: "123" }),
+        body: JSON.stringify({
+          message: content,
+          session_id: sessionId,
+          company_id: companyId,
+        }),
         signal,
       },
     );
