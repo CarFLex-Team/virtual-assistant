@@ -16,8 +16,8 @@ export type StreamCallbacks = {
 
 export async function streamAIResponse(
   content: string,
-  sessionId: string,
   companyId: string,
+  sessionId: string,
   { onStage, onToken, onVisual, onDone, onError, signal }: StreamCallbacks,
 ) {
   let fullAnswer = "";
