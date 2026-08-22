@@ -9,10 +9,9 @@ export const auth = betterAuth({
   user: {
     additionalFields: {
       company: {
-        type: "number",
+        type: "string",
         required: false,
         defaultValue: null,
-        input: true, // allow user to set company
       },
     },
   },

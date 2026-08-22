@@ -22,11 +22,7 @@ export async function streamAIResponse(
 ) {
   let fullAnswer = "";
   let visual: any = null;
-  console.log("streamAIResponse called with:", {
-    content,
-    sessionId,
-    companyId,
-  });
+
   try {
     const res = await fetch(
       "https://api.eliaracarflex.cfd/api/v1/chat/stream",
