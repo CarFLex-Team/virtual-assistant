@@ -40,7 +40,12 @@ export const auth = betterAuth({
   //   },
 
   // Social Providers
-
+  advanced: {
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+    },
+  },
   // Session
   session: {
     expiresIn: 60 * 60 * 24 * 30, // 30 days
