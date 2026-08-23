@@ -6,6 +6,7 @@ import {
   TrendingUp,
   X,
 } from "lucide-react";
+import { BriefData as Data } from "@/utils/data/DashboardData";
 const today = new Date().toLocaleDateString("en-US", {
   weekday: "long",
   day: "2-digit",
@@ -49,10 +50,13 @@ const SECTIONS = {
     heading: "text-teal-300",
   },
 };
+
 export default function DailyBrief({
   setShowBrief,
+  company,
 }: {
   setShowBrief: (show: boolean) => void;
+  company: string;
 }) {
   return (
     <div
@@ -67,7 +71,7 @@ export default function DailyBrief({
                 AI Morning Operations Brief
               </div>
               <h2 className="text-slate-100 text-lg font-semibold">
-                UAE Operations Center
+                {company === "e01" ? "UAE" : "Tire Depot"} Operations Center
               </h2>
               <div className="text-sm text-slate-500 mt-1">{today}</div>
             </div>
@@ -91,20 +95,14 @@ export default function DailyBrief({
               </h3>
             </div>
             <ul className="space-y-2 text-sm text-slate-300">
-              <li className="flex items-start gap-2">
-                <span className={`${SECTIONS.success.icon} mt-1`}>•</span>
-                <span>All systems running normally</span>
-              </li>
-              {/* <li className="flex items-start gap-2">
-                <span className={`${SECTIONS.success.icon} mt-1`}>•</span>
-                <span>
-                  Anomaly Detection: 0 flagged of 15,082 transactions scanned
-                </span>
-              </li> */}
-              <li className="flex items-start gap-2">
-                <span className={`${SECTIONS.success.icon} mt-1`}>•</span>
-                <span>Predictive Risk Score: 51.49 / 100 (Moderate)</span>
-              </li>
+              {Data[company as keyof typeof Data]?.aiMonitorSection?.map(
+                (item, index) => (
+                  <li key={index} className="flex items-start gap-2">
+                    <span className={`${SECTIONS.success.icon} `}>•</span>
+                    <span>{item}</span>
+                  </li>
+                ),
+              )}
             </ul>
           </section>
 
@@ -119,22 +117,27 @@ export default function DailyBrief({
             </div>
             <div className="space-y-2 text-sm text-slate-300">
               <p>
-                Current customer base stands at 14,750 with 1,965,812.71 AED in
-                active open balances.
+                {
+                  Data[company as keyof typeof Data]?.executiveSummarySection
+                    ?.title
+                }
               </p>
-              <div className="mt-3 grid grid-cols-2 gap-4">
-                <div className="bg-background rounded-lg p-3 border border-border">
-                  <div className="text-xs text-slate-500 mb-1">
-                    Financial Health Score
+              <div className="mt-3 flex gap-3">
+                {Data[
+                  company as keyof typeof Data
+                ]?.executiveSummarySection?.cards.map((card, index) => (
+                  <div
+                    key={index}
+                    className="bg-background rounded-lg p-3 border border-border flex-1"
+                  >
+                    <div className="text-xs text-slate-500 mb-1">
+                      {card.title}
+                    </div>
+                    <div className="text-slate-100 font-medium">
+                      {card.value}
+                    </div>
                   </div>
-                  <div className="text-slate-100 font-medium">33.45</div>
-                </div>
-                <div className="bg-background rounded-lg p-3 border border-border">
-                  <div className="text-xs text-slate-500 mb-1">
-                    Average overdue duration
-                  </div>
-                  <div className="text-slate-100 font-medium">138.86 days</div>
-                </div>
+                ))}
               </div>
             </div>
           </section>
@@ -149,25 +152,15 @@ export default function DailyBrief({
               </h3>
             </div>
             <ul className="space-y-3">
-              <li className="flex items-start gap-3 text-sm">
-                <div className="w-2 h-2 bg-red-500 rounded-full mt-1.5 shrink-0" />
-                <span className="text-slate-300">
-                  25 high-risk overdue accounts above 50 AED
-                </span>
-              </li>
-              <li className="flex items-start gap-3 text-sm">
-                <div className="w-2 h-2 bg-red-500 rounded-full mt-1.5 shrink-0" />
-                <span className="text-slate-300">
-                  Overdue exposure between 31-60 days: 115,713.54 AED
-                </span>
-              </li>
-              <li className="flex items-start gap-3 text-sm">
-                <div className="w-2 h-2 bg-red-500 rounded-full mt-1.5 shrink-0" />
-                <span className="text-slate-300">
-                  Top 5 customers represent 86.49% of total overdue value
-                  (collective)
-                </span>
-              </li>
+              {Data[company as keyof typeof Data]?.criticalAlertsSection?.map(
+                (alert, index) => (
+                  <li key={index} className="flex items-start gap-3 text-sm">
+                    {/* <div className="w-2 h-2 bg-red-500 rounded-full mt-1.5 shrink-0" /> */}
+                    <span className={`${SECTIONS.danger.icon} `}>•</span>
+                    <span className="text-slate-300">{alert}</span>
+                  </li>
+                ),
+              )}
             </ul>
           </section>
 
@@ -181,30 +174,14 @@ export default function DailyBrief({
               </h3>
             </div>
             <ul className="space-y-2 text-sm text-slate-300">
-              <li className="flex items-start gap-2">
-                <span className={`${SECTIONS.insight.icon} mt-1`}>•</span>
-                <span>
-                  Natural customer attrition trending within expected range
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className={`${SECTIONS.insight.icon} mt-1`}>•</span>
-                <span>Primary Supplier: GAMMA STAR AUTO SPARE PARTS LLC</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className={`${SECTIONS.insight.icon} mt-1`}>•</span>
-                <span>
-                  Collection pressure metrics concentrated among high-value
-                  customer accounts
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className={`${SECTIONS.insight.icon} mt-1`}>•</span>
-                <span>
-                  Overdue review concentration may impact short term operational
-                  liquidity
-                </span>
-              </li>
+              {Data[company as keyof typeof Data]?.aiHighlightsSection?.map(
+                (highlight, index) => (
+                  <li key={index} className="flex items-start gap-2">
+                    <span className={`${SECTIONS.insight.icon}`}>•</span>
+                    <span>{highlight}</span>
+                  </li>
+                ),
+              )}
             </ul>
           </section>
 
@@ -218,24 +195,22 @@ export default function DailyBrief({
               </h3>
             </div>
             <ol className="space-y-2 text-sm text-slate-300 list-decimal list-inside">
-              <li>
-                Prioritize outreach for accounts overdue more than 30 days
-              </li>
-              <li>
-                Review high-value customer accounts against financial risk
-                thresholds
-              </li>
-              <li>
-                Review concentration among customers with significant overdue
-                exposure
-              </li>
-              <li>
-                Monitor supplier dependency and purchase-value concentration
-              </li>
+              {Data[
+                company as keyof typeof Data
+              ]?.recommendedActionsSection?.map((action, index) => (
+                <li key={index}>{action}</li>
+              ))}
             </ol>
           </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div
+            className={`grid grid-cols-1 ${
+              Data[company as keyof typeof Data]?.operationalStatusSection
+                ?.length < 5
+                ? "md:grid-cols-2"
+                : ""
+            } gap-4`}
+          >
             <section
               className={`bg-surface border-l-4 ${SECTIONS.forecast.border} rounded-xl p-5`}
             >
@@ -243,8 +218,7 @@ export default function DailyBrief({
                 Forecast
               </h3>
               <p className="text-sm text-slate-300">
-                Forecasted next-period risk may increase within the next 14 days
-                if current payment behavior continues.
+                {Data[company as keyof typeof Data]?.forecast}
               </p>
             </section>
 
@@ -255,10 +229,14 @@ export default function DailyBrief({
                 Operational Status
               </h3>
               <ul className="space-y-1 text-sm text-slate-300">
-                <li>• Active Customers: 14,750</li>
-                <li>• High Risk Accounts: 31</li>
-                <li>• Responded Suppliers: 180</li>
-                <li>• AI Monitoring Engines: Real-time</li>
+                {Data[
+                  company as keyof typeof Data
+                ]?.operationalStatusSection?.map((status, index) => (
+                  <li key={index} className="flex items-start gap-2">
+                    <span className={`${SECTIONS.ops.icon}`}>•</span>
+                    <span>{status}</span>
+                  </li>
+                ))}
               </ul>
             </section>
           </div>

@@ -7,8 +7,109 @@ const CHART_COLORS = [
 
   "#F472B6",
 ];
-
-const DashboardData = {
+export const BriefData = {
+  e01: {
+    aiMonitorSection: [
+      "All systems running normally",
+      "Predictive Risk Score: 51.49 / 100 (Moderate)",
+    ],
+    executiveSummarySection: {
+      title:
+        "Current customer base stands at 14,750 with 1,965,812.71 AED in active open balances.",
+      cards: [
+        {
+          title: "Financial Health Score:",
+          value: "33.45",
+        },
+        {
+          title: "Average overdue duration:",
+          value: "138.86 days",
+        },
+      ],
+    },
+    criticalAlertsSection: [
+      "25 high-risk overdue accounts above 50 AED",
+      "Overdue exposure between 31-60 days: 115,713.54 AED",
+      "Top 5 customers represent 86.49% of total overdue value (collective)",
+    ],
+    aiHighlightsSection: [
+      "Natural customer attrition trending within expected range",
+      "Primary Supplier: GAMMA STAR AUTO SPARE PARTS LLC",
+      "Collection pressure metrics concentrated among high-value customer accounts",
+      "Overdue review concentration may impact short term operational liquidity",
+    ],
+    recommendedActionsSection: [
+      "Prioritize outreach for accounts overdue more than 30 days",
+      "Review high-value customer accounts against financial risk thresholds",
+      "Review concentration among customers with significant overdue exposure",
+      "Monitor supplier dependency and purchase-value concentration",
+    ],
+    forecast:
+      "Forecasted next-period risk may increase within the next 14 days if current payment behavior continues.",
+    operationalStatusSection: [
+      "Active Customers: 14,750",
+      "High Risk Accounts: 31",
+      "Responded Suppliers: 180",
+      "AI Monitoring Engines: Real-time",
+    ],
+  },
+  e02: {
+    aiMonitorSection: [
+      "Local data package validation: PASSED",
+      "20,968 sales invoices and 30,672 sales lines analyzed",
+      "Average modeled customer risk score: 11.87 / 100 (Low)",
+    ],
+    executiveSummarySection: {
+      title:
+        "Inventory classifications remain provisional until Winter and All-Season tire seasonality is applied.",
+      cards: [
+        {
+          title: "Inventory Value at Last Cost:",
+          value: "$807,531.52",
+        },
+        {
+          title: "Available Inventory:",
+          value: "10,572 Units",
+        },
+      ],
+    },
+    criticalAlertsSection: [
+      "21 customers are classified as High or Critical risk: 13 Critical and 8 High.",
+      "$44,655 of modeled 90-day revenue at risk is associated with High and Critical customers.",
+      "The top 5 customers represent 41.02% of total modeled customer revenue at risk.",
+    ],
+    aiHighlightsSection: [
+      "98 customers are currently classified as Active.",
+      "67 customers require business follow-up: 29 Declining, 21 At Risk, and 17 Lapsed.",
+      "116 customers remain Not Assessed because their purchase history is insufficient.",
+      "The supplier master contains 33 suppliers, including 23 suppliers with purchase orders.",
+      "The primary external supplier by purchase-line value is ShangHai Durotyre International Trading Co Ltd, with $1,256,169.31 in recorded purchase-line value.",
+      "52 SKUs are currently classified as Dead Stock, Slow Moving, or Never Sold, representing 917 units and $99,260.48 at last cost.",
+    ],
+    recommendedActionsSection: [
+      "Prioritize follow-up with the 13 Critical and 8 High-risk customers.",
+      "Review the 67 customers classified as Declining, At Risk, or Lapsed.",
+      "Validate the 116 Not Assessed customers and collect sufficient purchase history where possible.",
+      "Review the 52 Dead Stock, Slow-Moving, and Never-Sold SKUs after adding Winter and All-Season classification.",
+      "Validate supplier concentration across the 33 registered suppliers and 23 suppliers with purchase orders.",
+      "Configure the approved Minimum Margin and Reorder policies before enabling automated recommendations.",
+    ],
+    forecast:
+      "Forecasted next-period risk may increase within the next 14 days if current payment behavior continues.",
+    operationalStatusSection: [
+      "Customer Master: 281",
+      "Active Customers: 98",
+      "Customers Active in Latest 90 Days: 140",
+      "High/Critical Risk Customers: 21",
+      "Customers Requiring Action: 67",
+      "Suppliers: 33",
+      "Suppliers with Purchase Orders: 23",
+      "Sales Invoices Analyzed: 20,968",
+      "Monitoring Mode: Snapshot-based",
+    ],
+  },
+};
+export const DashboardData = {
   e01data: {
     TopSellingItems: [
       {
@@ -246,5 +347,3 @@ const DashboardData = {
     ],
   },
 };
-
-export default DashboardData;

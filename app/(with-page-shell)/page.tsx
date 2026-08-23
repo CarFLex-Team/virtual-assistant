@@ -2,7 +2,7 @@
 import DailyBrief from "@/components/DailyBrief";
 import { Clock } from "lucide-react";
 import { useMemo, useState } from "react";
-import DashboardData from "@/utils/DashboardData";
+import { DashboardData } from "@/utils/data/DashboardData";
 import {
   BarChart,
   Bar,
@@ -18,8 +18,7 @@ import {
   LineChart,
   Line,
 } from "recharts";
-import { authClient, useSession } from "@/lib/auth/auth-client";
-import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth/auth-client";
 
 const formatCurrency = (value: number) => {
   if (value >= 1000000) {
@@ -40,7 +39,7 @@ const tooltipStyle = {
 
 export default function Home() {
   const [showBrief, setShowBrief] = useState(true);
-  const router = useRouter();
+
   const { data: session } = authClient.useSession();
   const company = session?.user?.company;
 
@@ -69,7 +68,9 @@ export default function Home() {
           </div>
         </div>
 
-        {showBrief && <DailyBrief setShowBrief={setShowBrief} />}
+        {showBrief && (
+          <DailyBrief setShowBrief={setShowBrief} company={company ?? ""} />
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-surface rounded-2xl shadow-lg p-4 border border-border">
@@ -116,7 +117,7 @@ export default function Home() {
                   cursor={{ fill: "#94A3B8", opacity: 0.1 }}
                   formatter={(value) =>
                     typeof value === "number"
-                      ? `${value.toLocaleString()} AED`
+                      ? `${value.toLocaleString()} ${company === "e01" ? "AED" : "USD"}`
                       : ""
                   }
                   contentStyle={tooltipStyle}
@@ -192,7 +193,7 @@ export default function Home() {
                   cursor={{ fill: "#94A3B8", opacity: 0.1 }}
                   formatter={(value: any) =>
                     typeof value === "number"
-                      ? `${value.toFixed(1)}`
+                      ? `${value.toFixed(1)} ${company === "e01" ? "AED" : "USD"}`
                       : (value ?? "N/A")
                   }
                   contentStyle={tooltipStyle}
@@ -218,7 +219,7 @@ export default function Home() {
 
           <div className="bg-surface rounded-2xl shadow-lg p-4 border border-border">
             <h2 className="mb-4 text-slate-100 font-semibold">
-              Inventory Value Per Warehouse
+              {company === "e01" ? "Inventory per Warehouse" : "Top Customers"}
             </h2>
             <ResponsiveContainer width="100%" height={250}>
               <BarChart
@@ -258,7 +259,7 @@ export default function Home() {
                   cursor={{ fill: "#94A3B8", opacity: 0.1 }}
                   formatter={(value) =>
                     typeof value === "number"
-                      ? `${value.toLocaleString()} AED`
+                      ? `${value.toLocaleString()} ${company === "e01" ? "AED" : "USD"}`
                       : ""
                   }
                   contentStyle={tooltipStyle}
@@ -320,7 +321,7 @@ export default function Home() {
                     `${Number(value).toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
-                    })} AED`,
+                    })} ${company === "e01" ? "AED" : "USD"}`,
                     name,
                   ]}
                 />
